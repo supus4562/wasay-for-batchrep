@@ -284,7 +284,7 @@
         </div>
         <div class="hero-stat">
           <div class="hero-stat-num" id="stat-votes-num">—</div>
-          <div class="hero-stat-label">Total Votes</div>
+          <div class="hero-stat-label">Est. Total Votes</div>
         </div>
       </div>
     </div>
@@ -347,8 +347,18 @@
 let currentCategory = 'all';
 let showResolved = false;
 let currentCategories = [];
-const votedIssues = new Set(JSON.parse(localStorage.getItem('votedIssues') || '[]'));
 
+// --- Device fingerprint (one vote per device per issue) ---
+function getFingerprint() {
+  let fp = localStorage.getItem('deviceFingerprint');
+  if (!fp) {
+    fp = 'fp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('deviceFingerprint', fp);
+  }
+  return fp;
+}
+
+const votedIssues = new Set(JSON.parse(localStorage.getItem('votedIssues') || '[]'));
 function saveVoted() { localStorage.setItem('votedIssues', JSON.stringify([...votedIssues])); }
 
 function showToast(msg) {
@@ -415,10 +425,11 @@ async function loadIssues() {
 
   const all = await (await fetch('/api/issues')).json();
   const resolved = all.filter(i => i.status === 'resolved');
-  const totalVotes = all.reduce((s,i) => s + i.upvotes + i.downvotes, 0);
+  const cvRes = await fetch('/api/campaign-votes');
+  const cvData = await cvRes.json();
   document.getElementById('stat-issues-num').textContent = all.length;
   document.getElementById('stat-resolved-num').textContent = resolved.length;
-  document.getElementById('stat-votes-num').textContent = totalVotes;
+  document.getElementById('stat-votes-num').textContent = cvData.total.toLocaleString();
 
   const filtered = showResolved ? issues : issues.filter(i => i.status !== 'resolved');
   feed.innerHTML = '';
@@ -431,15 +442,16 @@ async function loadIssues() {
   filtered.forEach((issue, idx) => {
     const score = issue.upvotes - issue.downvotes;
     const voted = votedIssues.has(issue.id);
+    const disabledAttr = voted ? 'disabled style="opacity:0.4;cursor:not-allowed"' : '';
     const card = document.createElement('div');
     card.className = 'issue-card' + (issue.status === 'resolved' ? ' resolved' : '');
     card.style.animationDelay = (idx * 0.05) + 's';
     card.innerHTML = `
       <div class="issue-card-header">
         <div class="vote-col">
-          <button class="vote-btn up ${voted?'voted-up':''}" onclick="vote(${issue.id},'up',this)" title="Upvote">▲</button>
+          <button class="vote-btn up ${voted?'voted-up':''}" onclick="${voted ? '' : `vote(${issue.id},'up',this)`}" ${disabledAttr} title="Upvote">▲</button>
           <div class="vote-score" id="score-${issue.id}">${score}</div>
-          <button class="vote-btn down ${voted?'voted-down':''}" onclick="vote(${issue.id},'down',this)" title="Downvote">▼</button>
+          <button class="vote-btn down ${voted?'voted-down':''}" onclick="${voted ? '' : `vote(${issue.id},'down',this)`}" ${disabledAttr} title="Downvote">▼</button>
         </div>
         <div class="issue-body">
           <div class="issue-meta">
@@ -465,11 +477,29 @@ async function loadIssues() {
 }
 
 async function vote(id, type, btn) {
+  if (votedIssues.has(id)) {
+    showToast('⚠️ You already voted on this issue.');
+    return;
+  }
+  const fingerprint = getFingerprint();
   const res = await fetch(`/api/issues/${id}/vote`, {
-    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type})
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type, fingerprint})
   });
   const data = await res.json();
+  if (res.status === 409 || data.alreadyVoted) {
+    votedIssues.add(id);
+    saveVoted();
+    showToast('⚠️ You already voted on this issue.');
+    return;
+  }
   document.getElementById('score-' + id).textContent = data.upvotes - data.downvotes;
+  // Update the ▲/▼ tally in the footer
+  const footer = btn.closest('.issue-card').querySelector('.issue-card-footer span');
+  if (footer) footer.textContent = `▲${data.upvotes} · ▼${data.downvotes}`;
+  // Grey out both buttons
+  const card = btn.closest('.issue-card');
+  card.querySelectorAll('.vote-btn').forEach(b => { b.disabled = true; b.style.opacity = '0.4'; b.style.cursor = 'not-allowed'; });
+  if (type === 'up') btn.classList.add('voted-up'); else btn.classList.add('voted-down');
   votedIssues.add(id);
   saveVoted();
   showToast(type === 'up' ? '👍 Upvoted!' : '👎 Downvoted!');
