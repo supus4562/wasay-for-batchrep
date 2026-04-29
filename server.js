@@ -168,8 +168,8 @@ app.post('/api/admin/categories', requireAdmin, async (req, res) => {
   }
 });
 
-app.delete('/api/admin/categories/:value', requireAdmin, async (req, res) => {
-  await pool.query('DELETE FROM categories WHERE value = $1', [req.params.value]);
+app.delete('/api/admin/categories/:id', requireAdmin, async (req, res) => {
+  await pool.query('DELETE FROM categories WHERE id = $1', [req.params.id]);
   res.json({ success: true });
 });
 
