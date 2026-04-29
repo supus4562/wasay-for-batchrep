@@ -483,3 +483,84 @@ async function toggleComments(id, btn) {
   const res = await fetch(`/api/issues/${id}/comments`);
   const comments = await res.json();
   renderComments(section, id, comments);
+}
+
+function renderComments(section, issueId, comments) {
+  section.innerHTML = '';
+  comments.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'comment-item';
+    div.innerHTML = `
+      <div class="comment-avatar">${escHtml(c.author.charAt(0).toUpperCase())}</div>
+      <div>
+        <div class="comment-author">${escHtml(c.author)}<span class="comment-time">${formatDate(c.created_at)}</span></div>
+        <div class="comment-body-text">${escHtml(c.body)}</div>
+      </div>`;
+    section.appendChild(div);
+  });
+
+  const form = document.createElement('div');
+  form.className = 'comment-form';
+  form.innerHTML = `
+    <input class="comment-name-input" id="cname-${issueId}" type="text" placeholder="Your name"/>
+    <input class="comment-input" id="cbody-${issueId}" type="text" placeholder="Write a comment…"/>
+    <button class="comment-submit" onclick="postComment(${issueId})">Post</button>
+  `;
+  section.appendChild(form);
+}
+
+async function postComment(id) {
+  const author = document.getElementById('cname-' + id).value.trim();
+  const body = document.getElementById('cbody-' + id).value.trim();
+  if (!author || !body) return showToast('Please enter your name and comment.');
+  await fetch(`/api/issues/${id}/comments`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({author,body}) });
+  showToast('💬 Comment posted!');
+  const section = document.getElementById('comments-' + id);
+  const res = await fetch(`/api/issues/${id}/comments`);
+  const comments = await res.json();
+  renderComments(section, id, comments);
+}
+
+async function submitIssue() {
+  const title = document.getElementById('issue-title').value.trim();
+  const category = document.getElementById('issue-category').value;
+  const description = document.getElementById('issue-desc').value.trim();
+  if (!title || !category || !description) return showToast('Please fill in all fields.');
+
+  const res = await fetch('/api/issues', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title,category,description}) });
+  if (res.ok) {
+    document.getElementById('issue-title').value = '';
+    document.getElementById('issue-category').value = '';
+    document.getElementById('issue-desc').value = '';
+    const s = document.getElementById('submit-success');
+    s.style.display = 'flex';
+    setTimeout(() => s.style.display = 'none', 4000);
+    showToast('🎉 Issue submitted successfully!');
+    loadIssues();
+    document.getElementById('issues').scrollIntoView({ behavior:'smooth' });
+  }
+}
+
+function setFilter(btn, cat) {
+  document.querySelectorAll('.filter-btn[data-cat]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCategory = cat;
+  loadIssues();
+}
+
+function toggleResolved() {
+  showResolved = !showResolved;
+  const btn = document.getElementById('toggle-resolved');
+  btn.classList.toggle('active', showResolved);
+  btn.textContent = showResolved ? 'Hide Resolved' : 'Show Resolved';
+  loadIssues();
+}
+
+// Boot sequence
+(async () => {
+  await loadCategories();
+  loadIssues();
+})();
+</script>
+</body>
+</html>
