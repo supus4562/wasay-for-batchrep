@@ -368,24 +368,35 @@ function escHtml(str) {
 }
 
 async function loadCategories() {
-  // Adding ?t=Date.now() forces the browser to fetch fresh data instead of using cache
-  const res = await fetch('/api/categories?t=' + Date.now());
-  currentCategories = await res.json();
-  
-  // Select Dropdown
-  const select = document.getElementById('issue-category');
-  select.innerHTML = '<option value="">Select a category…</option>';
-  currentCategories.forEach(cat => {
-    select.innerHTML += `<option value="${escHtml(cat.value)}">${escHtml(cat.name)}</option>`;
-  });
+  try {
+    // The ultimate cache-buster: unique URL + no-store headers
+    const res = await fetch('/api/categories?bust=' + new Date().getTime(), {
+      cache: 'no-store',
+      headers: {
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache'
+      }
+    });
+    
+    currentCategories = await res.json();
+    
+    // Select Dropdown
+    const select = document.getElementById('issue-category');
+    select.innerHTML = '<option value="">Select a category…</option>';
+    currentCategories.forEach(cat => {
+      select.innerHTML += `<option value="${escHtml(cat.value)}">${escHtml(cat.name)}</option>`;
+    });
 
-  // Filter Bar
-  const filterBar = document.getElementById('dynamic-filters');
-  filterBar.innerHTML = `<button class="filter-btn active" data-cat="all" onclick="setFilter(this,'all')">All</button>`;
-  currentCategories.forEach(cat => {
-    filterBar.innerHTML += `<button class="filter-btn" data-cat="${escHtml(cat.value)}" onclick="setFilter(this,'${escHtml(cat.value)}')">${escHtml(cat.name)}</button>`;
-  });
-  filterBar.innerHTML += `<div style="margin-left:auto"><button class="filter-btn" id="toggle-resolved" onclick="toggleResolved()">Show Resolved</button></div>`;
+    // Filter Bar
+    const filterBar = document.getElementById('dynamic-filters');
+    filterBar.innerHTML = `<button class="filter-btn active" data-cat="all" onclick="setFilter(this,'all')">All</button>`;
+    currentCategories.forEach(cat => {
+      filterBar.innerHTML += `<button class="filter-btn" data-cat="${escHtml(cat.value)}" onclick="setFilter(this,'${escHtml(cat.value)}')">${escHtml(cat.name)}</button>`;
+    });
+    filterBar.innerHTML += `<div style="margin-left:auto"><button class="filter-btn" id="toggle-resolved" onclick="toggleResolved()">Show Resolved</button></div>`;
+  } catch (err) {
+    console.error("Failed to load categories:", err);
+  }
 }
 function getCatLabel(catValue) {
   const cat = currentCategories.find(c => c.value === catValue);
