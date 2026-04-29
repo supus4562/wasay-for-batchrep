@@ -40,21 +40,7 @@ async function initDB() {
       );
     `);
 
-    // Initialize default categories if empty
-    const { rows: catCount } = await pool.query('SELECT COUNT(*) as count FROM categories');
-    if (parseInt(catCount[0].count) === 0) {
-      const initial = [
-        {n: '📚 Academics', v: 'academics'},
-        {n: '🏗️ Facilities', v: 'facilities'},
-        {n: '🎉 Events', v: 'events'},
-        {n: '🤝 Welfare', v: 'welfare'},
-        {n: '🏛️ Admin', v: 'administration'},
-        {n: '💬 Other', v: 'other'}
-      ];
-      for (let c of initial) {
-        await pool.query('INSERT INTO categories (name, value) VALUES ($1, $2)', [c.n, c.v]);
-      }
-    }
+  
     console.log('Database initialized successfully.');
   } catch (err) {
     console.error('Failed to initialize database:', err);
