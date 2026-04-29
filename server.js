@@ -238,5 +238,29 @@ app.delete('/api/admin/comments/:id', requireAdmin, async (req, res) => {
 
 app.listen(PORT, () => console.log(`\n🗳️  Wasay For Batch Rep running on port ${PORT}\n`));
 
+// =================== FRONTEND ROUTING (VERCEL FIX) ===================
+
+// Serve index.html for the root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Serve admin.html explicitly
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Serve the admin panel if someone just types /admin
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Catch-all route: If a user types a random URL, send them back to the homepage
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Vercel requires the express app to be exported
+module.exports = app;
 // Vercel requires the express app to be exported
 module.exports = app;
