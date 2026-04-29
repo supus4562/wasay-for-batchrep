@@ -369,33 +369,35 @@ function escHtml(str) {
 
 async function loadCategories() {
   try {
-    // The ultimate cache-buster: unique URL + no-store headers
-    const res = await fetch('/api/categories?bust=' + new Date().getTime(), {
-      cache: 'no-store',
-      headers: {
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache'
-      }
+    console.log("Fetching fresh categories...");
+    // Force a unique request every time to bypass Vercel's Edge cache
+    const res = await fetch('/api/categories?v=' + new Date().getTime(), {
+      headers: { 'Cache-Control': 'no-cache' }
     });
     
     currentCategories = await res.json();
-    
-    // Select Dropdown
+    console.log("Categories received:", currentCategories); // This will show in your F12 console
+
     const select = document.getElementById('issue-category');
+    const filterBar = document.getElementById('dynamic-filters');
+
+    if (!select || !filterBar) return;
+
+    // Update Dropdown
     select.innerHTML = '<option value="">Select a category…</option>';
     currentCategories.forEach(cat => {
       select.innerHTML += `<option value="${escHtml(cat.value)}">${escHtml(cat.name)}</option>`;
     });
 
-    // Filter Bar
-    const filterBar = document.getElementById('dynamic-filters');
+    // Update Filter Bar
     filterBar.innerHTML = `<button class="filter-btn active" data-cat="all" onclick="setFilter(this,'all')">All</button>`;
     currentCategories.forEach(cat => {
       filterBar.innerHTML += `<button class="filter-btn" data-cat="${escHtml(cat.value)}" onclick="setFilter(this,'${escHtml(cat.value)}')">${escHtml(cat.name)}</button>`;
     });
     filterBar.innerHTML += `<div style="margin-left:auto"><button class="filter-btn" id="toggle-resolved" onclick="toggleResolved()">Show Resolved</button></div>`;
+    
   } catch (err) {
-    console.error("Failed to load categories:", err);
+    console.error("Critical error loading categories:", err);
   }
 }
 function getCatLabel(catValue) {
