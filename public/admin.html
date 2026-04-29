@@ -114,6 +114,24 @@
 
   <div class="admin-content">
     
+    <!-- Est. Total Votes Editor -->
+    <div class="admin-section-title" style="margin-bottom:16px">🗳️ Est. Total Votes</div>
+    <div class="admin-card" style="padding: 24px; margin-bottom: 40px; border-left: 3px solid var(--accent);">
+      <div style="font-size:13px; color:var(--text-dim); margin-bottom:16px; font-family:'JetBrains Mono',monospace; letter-spacing:0.05em;">
+        This number appears on the public homepage as the campaign's estimated total votes. It is independent of issue votes and only editable here.
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="font-family:'Bebas Neue',cursive; font-size:48px; color:var(--gold); line-height:1;" id="campaign-votes-display">—</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.15em; text-transform:uppercase;">Set New Total</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="number" id="campaign-votes-input" class="login-input" style="margin:0; width:160px;" placeholder="e.g. 247" min="0"/>
+            <button class="login-btn" style="margin:0; width:auto; padding:12px 24px;" onclick="saveCampaignVotes()">Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="admin-section-title">Manage Categories</div>
     <div class="admin-card" style="padding: 24px; margin-bottom: 40px;">
       <div style="display:flex; gap:12px; margin-bottom:16px;">
@@ -165,6 +183,7 @@ async function doLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     await loadAdminCategories();
+    await loadCampaignVotes();
     loadAdminIssues();
   } else {
     document.getElementById('login-error').style.display = 'block';
@@ -173,6 +192,26 @@ async function doLogin() {
 
 function doLogout() { location.reload(); }
 function authHeaders() { return { 'Content-Type': 'application/json', 'username': adminAuth.username, 'password': adminAuth.password }; }
+
+// --- Campaign Votes ---
+async function loadCampaignVotes() {
+  const res = await fetch('/api/campaign-votes');
+  const data = await res.json();
+  document.getElementById('campaign-votes-display').textContent = data.total.toLocaleString();
+  document.getElementById('campaign-votes-input').value = data.total;
+}
+
+async function saveCampaignVotes() {
+  const total = parseInt(document.getElementById('campaign-votes-input').value);
+  if (isNaN(total) || total < 0) return showToast('⚠ Enter a valid number');
+  const res = await fetch('/api/admin/campaign-votes', {
+    method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ total })
+  });
+  if (res.ok) {
+    document.getElementById('campaign-votes-display').textContent = total.toLocaleString();
+    showToast('✓ Est. Total Votes updated to ' + total.toLocaleString());
+  }
+}
 
 // --- Categories ---
 async function loadAdminCategories() {
