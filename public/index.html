@@ -368,7 +368,8 @@ function escHtml(str) {
 }
 
 async function loadCategories() {
-  const res = await fetch('/api/categories');
+  // Adding ?t=Date.now() forces the browser to fetch fresh data instead of using cache
+  const res = await fetch('/api/categories?t=' + Date.now());
   currentCategories = await res.json();
   
   // Select Dropdown
@@ -386,7 +387,6 @@ async function loadCategories() {
   });
   filterBar.innerHTML += `<div style="margin-left:auto"><button class="filter-btn" id="toggle-resolved" onclick="toggleResolved()">Show Resolved</button></div>`;
 }
-
 function getCatLabel(catValue) {
   const cat = currentCategories.find(c => c.value === catValue);
   return cat ? cat.name : catValue;
