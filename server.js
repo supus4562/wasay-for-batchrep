@@ -226,27 +226,30 @@ app.listen(PORT, () => console.log(`\n🗳️  Wasay For Batch Rep running on po
 
 // =================== FRONTEND ROUTING (VERCEL FIX) ===================
 
-// Serve index.html for the root URL
+// =================== FRONTEND ROUTING (VERCEL FIX) ===================
+
+// Reusable function to kill cache on HTML files
+function sendUncached(res, filePath) {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, 'public', filePath));
+}
+
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  sendUncached(res, 'index.html');
 });
 
-// Serve admin.html explicitly
 app.get('/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  sendUncached(res, 'admin.html');
 });
 
-// Serve the admin panel if someone just types /admin
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  sendUncached(res, 'admin.html');
 });
 
-// Catch-all route: If a user types a random URL, send them back to the homepage
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  sendUncached(res, 'index.html');
 });
 
-// Vercel requires the express app to be exported
-module.exports = app;
-// Vercel requires the express app to be exported
 module.exports = app;
