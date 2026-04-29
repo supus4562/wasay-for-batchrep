@@ -38,6 +38,20 @@ async function initDB() {
         name TEXT NOT NULL,
         value TEXT NOT NULL UNIQUE
       );
+
+      CREATE TABLE IF NOT EXISTS campaign_votes (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        total INTEGER DEFAULT 0,
+        CHECK (id = 1)
+      );
+
+      INSERT INTO campaign_votes (id, total) VALUES (1, 0) ON CONFLICT DO NOTHING;
+
+      CREATE TABLE IF NOT EXISTS voter_fingerprints (
+        fingerprint TEXT NOT NULL,
+        issue_id INTEGER NOT NULL REFERENCES issues(id) ON DELETE CASCADE,
+        PRIMARY KEY (fingerprint, issue_id)
+      );
     `);
 
   
@@ -64,6 +78,11 @@ function requireAdmin(req, res, next) {
 }
 
 // =================== PUBLIC ROUTES ===================
+
+app.get('/api/campaign-votes', async (req, res) => {
+  const { rows } = await pool.query('SELECT total FROM campaign_votes WHERE id = 1');
+  res.json({ total: rows[0]?.total ?? 0 });
+});
 
 app.get('/api/categories', async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM categories');
@@ -115,11 +134,25 @@ app.post('/api/issues', async (req, res) => {
 });
 
 app.post('/api/issues/:id/vote', async (req, res) => {
-  const { type } = req.body;
+  const { type, fingerprint } = req.body;
   if (!['up', 'down'].includes(type)) return res.status(400).json({ error: 'Invalid vote' });
-  
+  if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
+
+  // Check if this device already voted on this issue
+  const existing = await pool.query(
+    'SELECT 1 FROM voter_fingerprints WHERE fingerprint = $1 AND issue_id = $2',
+    [fingerprint, req.params.id]
+  );
+  if (existing.rows.length > 0) {
+    return res.status(409).json({ error: 'Already voted', alreadyVoted: true });
+  }
+
   const col = type === 'up' ? 'upvotes' : 'downvotes';
   await pool.query(`UPDATE issues SET ${col} = ${col} + 1 WHERE id = $1`, [req.params.id]);
+  await pool.query(
+    'INSERT INTO voter_fingerprints (fingerprint, issue_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+    [fingerprint, req.params.id]
+  );
   
   const { rows } = await pool.query('SELECT upvotes, downvotes FROM issues WHERE id = $1', [req.params.id]);
   res.json(rows[0]);
@@ -142,6 +175,13 @@ app.post('/api/issues/:id/comments', async (req, res) => {
 });
 
 // =================== ADMIN ROUTES ===================
+
+app.patch('/api/admin/campaign-votes', requireAdmin, async (req, res) => {
+  const { total } = req.body;
+  if (typeof total !== 'number' || total < 0) return res.status(400).json({ error: 'Invalid total' });
+  await pool.query('UPDATE campaign_votes SET total = $1 WHERE id = 1', [total]);
+  res.json({ success: true, total });
+});
 
 app.patch('/api/admin/issues/:id', requireAdmin, async (req, res) => {
   const { title, description, category } = req.body;
