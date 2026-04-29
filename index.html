@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wasay For Batch Rep — SSE Voice Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --ink: #111827;
+    --paper: #f8fafc;
+    --cream: #e2e8f0;
+    --accent: #4A7694;
+    --accent-hover: #3d627a;
+    --accent2: #2C4A60;
+    --gold: #608fae; 
+    --muted: #64748b;
+    --card: #ffffff;
+    --border: #cbd5e1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  .hero {
+    position: relative;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0;
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero-bg-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(255,255,255,0.03) 79px, rgba(255,255,255,0.03) 80px),
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,0.03) 79px, rgba(255,255,255,0.03) 80px);
+    pointer-events: none;
+  }
+
+  .hero-diagonal {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: var(--paper);
+    clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid rgba(96,143,174,0.4);
+    padding: 6px 14px;
+    border-radius: 2px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero-main {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(72px, 13vw, 180px);
+    line-height: 0.88;
+    letter-spacing: 0.01em;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .hero-main .accent-word {
+    color: var(--accent);
+    display: block;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.2);
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.65);
+    max-width: 520px;
+    margin-top: 28px;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  .hero-stats { display: flex; gap: 40px; margin-top: 48px; animation: fadeUp 0.7s 0.3s ease both; }
+  .hero-stat-num { font-family: 'Bebas Neue', cursive; font-size: 42px; line-height: 1; color: var(--gold); }
+  .hero-stat-label { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+  
+  .hero-scroll-hint {
+    position: absolute; bottom: 140px; right: 48px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.25); writing-mode: vertical-rl;
+    display: flex; align-items: center; gap: 12px;
+    animation: fadeUp 0.7s 0.5s ease both;
+  }
+  .hero-scroll-hint::after { content: ''; display: block; width: 1px; height: 60px; background: linear-gradient(to bottom, rgba(255,255,255,0.25), transparent); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .topnav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 48px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .topnav-logo { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; }
+  .topnav-links { display: flex; gap: 32px; align-items: center; }
+  .topnav-links a { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; color: rgba(255,255,255,0.5); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+  .topnav-links a:hover { color: #fff; }
+  .btn-admin { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; padding: 8px 18px; border: 1px solid rgba(96,143,174,0.5); color: var(--gold); border-radius: 2px; text-decoration: none; transition: all 0.2s; }
+  .btn-admin:hover { background: rgba(96,143,174,0.1); color: var(--gold) !important; }
+
+  .hero-content { flex: 1; display: flex; align-items: flex-end; padding: 48px 48px 160px; position: relative; z-index: 2; }
+
+  .section { padding: 80px 48px; max-width: 1200px; margin: 0 auto; }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .section-title { font-family: 'Bebas Neue', cursive; font-size: clamp(40px, 5vw, 64px); line-height: 1; color: var(--ink); margin-bottom: 40px; }
+
+  .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 40px; position: relative; overflow: hidden; }
+  .form-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .form-row { margin-bottom: 24px; }
+  .form-label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .form-input, .form-select, .form-textarea { width: 100%; background: var(--paper); border: 1px solid var(--border); border-radius: 3px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,118,148,0.15); }
+  .form-textarea { min-height: 110px; resize: vertical; line-height: 1.6; }
+  .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; cursor: pointer; }
+
+  .btn-submit { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: white; border: none; border-radius: 3px; padding: 14px 32px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; cursor: pointer; transition: all 0.2s; }
+  .btn-submit:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(74,118,148,0.25); }
+  .btn-submit:active { transform: translateY(0); }
+  
+  .submit-success { display: none; align-items: center; gap: 10px; background: rgba(74,118,148,0.1); border: 1px solid rgba(74,118,148,0.3); border-radius: 3px; padding: 14px 20px; color: var(--accent); font-weight: 500; margin-top: 16px; font-size: 14px; }
+
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; align-items: center; }
+  .filter-btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 2px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+  .filter-btn:hover, .filter-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .filter-btn.active { font-weight: 500; }
+
+  .issue-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 16px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; animation: fadeUp 0.4s ease both; }
+  .issue-card:hover { box-shadow: 0 8px 32px rgba(17,24,39,0.06); transform: translateY(-2px); }
+  .issue-card.resolved { opacity: 0.65; }
+  .issue-card-header { padding: 24px 28px 0; display: flex; align-items: flex-start; gap: 16px; }
+
+  .vote-col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 44px; padding-top: 2px; }
+  .vote-btn { width: 32px; height: 32px; border-radius: 3px; border: 1px solid var(--border); background: var(--paper); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; font-size: 14px; }
+  .vote-btn:hover.up { background: rgba(74,118,148,0.1); border-color: var(--accent); }
+  .vote-btn:hover.down { background: rgba(212,56,13,0.1); border-color: #d4380d; }
+  .vote-btn.voted-up { background: rgba(74,118,148,0.15); border-color: var(--accent); }
+  .vote-btn.voted-down { background: rgba(212,56,13,0.15); border-color: #d4380d; }
+  .vote-score { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink); }
+
+  .issue-body { flex: 1; }
+  .issue-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  
+  .issue-cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    font-weight: 500;
+    background: rgba(74, 118, 148, 0.12); 
+    color: var(--accent);
+  }
+
+  .issue-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.05em; }
+  .resolved-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; background: rgba(74,118,148,0.12); color: var(--accent); border: 1px solid rgba(74,118,148,0.2); }
+  .issue-title { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 600; color: var(--ink); line-height: 1.3; margin-bottom: 8px; }
+  .issue-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 4px; }
+
+  .issue-card-footer { padding: 14px 28px 14px 88px; display: flex; align-items: center; gap: 16px; border-top: 1px solid var(--border); margin-top: 20px; }
+  .comment-toggle { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--muted); font-weight: 500; transition: color 0.15s; padding: 0; }
+  .comment-toggle:hover { color: var(--ink); }
+
+  .comments-section { display: none; padding: 0 28px 24px 88px; border-top: 1px solid var(--border); }
+  .comments-section.open { display: block; }
+  .comment-item { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; gap: 12px; }
+  .comment-item:last-of-type { border-bottom: none; }
+  .comment-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', cursive; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+  .comment-author { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+  .comment-body-text { font-size: 14px; color: var(--muted); line-height: 1.55; }
+  .comment-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-left: 8px; font-weight: 400; }
+  
+  .comment-form { display: flex; gap: 10px; margin-top: 16px; align-items: flex-start; }
+  .comment-input, .comment-name-input { background: var(--paper); border: 1px solid var(--border); border-radius: 3px; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); outline: none; transition: border-color 0.2s; }
+  .comment-input { flex: 1; }
+  .comment-name-input { width: 140px; }
+  .comment-input:focus, .comment-name-input:focus { border-color: var(--accent); }
+  .comment-submit { background: var(--ink); color: var(--paper); border: none; border-radius: 3px; padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+  .comment-submit:hover { background: #2a2a35; }
+
+  .empty-state { text-align: center; padding: 80px 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-title { font-family: 'Bebas Neue', cursive; font-size: 28px; color: var(--muted); margin-bottom: 8px; }
+  .empty-sub { font-size: 14px; color: var(--muted); }
+
+  .site-footer { background: var(--ink); color: rgba(255,255,255,0.35); text-align: center; padding: 40px 48px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; margin-top: 80px; }
+  .site-footer span { color: var(--gold); }
+
+  .toast { position: fixed; bottom: 32px; right: 32px; background: var(--ink); color: var(--paper); padding: 14px 22px; border-radius: 4px; font-size: 14px; font-weight: 500; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-left: 3px solid var(--gold); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .loading-spinner { display: flex; align-items: center; justify-content: center; padding: 60px; gap: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .topnav { padding: 18px 24px; }
+    .hero-content { padding: 32px 24px 140px; }
+    .hero-stats { gap: 24px; flex-wrap: wrap; }
+    .section { padding: 56px 24px; }
+    .form-card { padding: 28px 24px; }
+    .issue-card-footer, .comments-section { padding-left: 24px; }
+    .issue-card-header { flex-direction: column; gap: 12px; }
+    .comment-form { flex-wrap: wrap; }
+    .hero-scroll-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-bg-lines"></div>
+  <nav class="topnav">
+    <div class="topnav-logo">SSE · Batch 2029</div>
+    <div class="topnav-links">
+      <a href="#submit">Submit Issue</a>
+      <a href="#issues">Browse Issues</a>
+      <a href="admin.html" class="btn-admin">Admin ↗</a>
+    </div>
+  </nav>
+
+  <div class="hero-content">
+    <div>
+      <div class="hero-tag">📣 SSE Batch Representative Election 2026</div>
+      <h1 class="hero-main">
+        Wasay
+        <span class="accent-word">For Batch</span>
+        Rep.
+      </h1>
+      <p class="hero-sub">
+        Your voice shapes our batch. Log issues, propose solutions, vote on what matters — together we build the SSE experience we deserve.
+      </p>
+      <div class="hero-stats">
+        <div class="hero-stat" id="stat-issues">
+          <div class="hero-stat-num" id="stat-issues-num">—</div>
+          <div class="hero-stat-label">Issues Logged</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-resolved-num">—</div>
+          <div class="hero-stat-label">Resolved</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-votes-num">—</div>
+          <div class="hero-stat-label">Total Votes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll-hint">SCROLL TO ENGAGE</div>
+  <div class="hero-diagonal"></div>
+</section>
+
+<section class="section" id="submit">
+  <div class="section-label">// 01 — Make Your Voice Heard</div>
+  <h2 class="section-title">Submit an Issue</h2>
+  <div class="form-card">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div class="form-row" style="grid-column:1/-1">
+        <label class="form-label">Issue Title</label>
+        <input class="form-input" id="issue-title" type="text" placeholder="e.g. Library closing too early during exams"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="issue-category">
+          <option value="">Select a category…</option>
+          </select>
+      </div>
+      <div class="form-row" style="grid-column:1/-1">
+        <label class="form-label">Describe the Issue</label>
+        <textarea class="form-textarea" id="issue-desc" placeholder="Provide as much detail as possible so it can be addressed effectively…"></textarea>
+      </div>
+    </div>
+    <button class="btn-submit" onclick="submitIssue()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+      Submit Issue
+    </button>
+    <div class="submit-success" id="submit-success">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      Issue submitted! It's now live in the feed below.
+    </div>
+  </div>
+</section>
+
+<section class="section" id="issues" style="padding-top:0">
+  <div class="section-label">// 02 — Community Feed</div>
+  <h2 class="section-title">All Issues</h2>
+
+  <div class="filter-bar" id="dynamic-filters">
+    </div>
+
+  <div id="issues-feed">
+    <div class="loading-spinner"><div class="spinner"></div>LOADING ISSUES…</div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span>Wasay For Batch Rep</span> · SSE Class of 2029 · Built with 💙 for the community
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentCategory = 'all';
+let showResolved = false;
+let currentCategories = [];
+const votedIssues = new Set(JSON.parse(localStorage.getItem('votedIssues') || '[]'));
+
+function saveVoted() { localStorage.setItem('votedIssues', JSON.stringify([...votedIssues])); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function formatDate(str) {
+  const d = new Date(str);
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadCategories() {
+  const res = await fetch('/api/categories');
+  currentCategories = await res.json();
+  
+  // Select Dropdown
+  const select = document.getElementById('issue-category');
+  select.innerHTML = '<option value="">Select a category…</option>';
+  currentCategories.forEach(cat => {
+    select.innerHTML += `<option value="${escHtml(cat.value)}">${escHtml(cat.name)}</option>`;
+  });
+
+  // Filter Bar
+  const filterBar = document.getElementById('dynamic-filters');
+  filterBar.innerHTML = `<button class="filter-btn active" data-cat="all" onclick="setFilter(this,'all')">All</button>`;
+  currentCategories.forEach(cat => {
+    filterBar.innerHTML += `<button class="filter-btn" data-cat="${escHtml(cat.value)}" onclick="setFilter(this,'${escHtml(cat.value)}')">${escHtml(cat.name)}</button>`;
+  });
+  filterBar.innerHTML += `<div style="margin-left:auto"><button class="filter-btn" id="toggle-resolved" onclick="toggleResolved()">Show Resolved</button></div>`;
+}
+
+function getCatLabel(catValue) {
+  const cat = currentCategories.find(c => c.value === catValue);
+  return cat ? cat.name : catValue;
+}
+
+async function loadIssues() {
+  const feed = document.getElementById('issues-feed');
+  feed.innerHTML = '<div class="loading-spinner"><div class="spinner"></div>LOADING ISSUES…</div>';
+  const params = new URLSearchParams();
+  if (currentCategory !== 'all') params.append('category', currentCategory);
+  const res = await fetch('/api/issues?' + params);
+  const issues = await res.json();
+
+  const all = await (await fetch('/api/issues')).json();
+  const resolved = all.filter(i => i.status === 'resolved');
+  const totalVotes = all.reduce((s,i) => s + i.upvotes + i.downvotes, 0);
+  document.getElementById('stat-issues-num').textContent = all.length;
+  document.getElementById('stat-resolved-num').textContent = resolved.length;
+  document.getElementById('stat-votes-num').textContent = totalVotes;
+
+  const filtered = showResolved ? issues : issues.filter(i => i.status !== 'resolved');
+  feed.innerHTML = '';
+
+  if (filtered.length === 0) {
+    feed.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No Issues Yet</div><div class="empty-sub">Be the first to submit an issue in this category.</div></div>`;
+    return;
+  }
+
+  filtered.forEach((issue, idx) => {
+    const score = issue.upvotes - issue.downvotes;
+    const voted = votedIssues.has(issue.id);
+    const card = document.createElement('div');
+    card.className = 'issue-card' + (issue.status === 'resolved' ? ' resolved' : '');
+    card.style.animationDelay = (idx * 0.05) + 's';
+    card.innerHTML = `
+      <div class="issue-card-header">
+        <div class="vote-col">
+          <button class="vote-btn up ${voted?'voted-up':''}" onclick="vote(${issue.id},'up',this)" title="Upvote">▲</button>
+          <div class="vote-score" id="score-${issue.id}">${score}</div>
+          <button class="vote-btn down ${voted?'voted-down':''}" onclick="vote(${issue.id},'down',this)" title="Downvote">▼</button>
+        </div>
+        <div class="issue-body">
+          <div class="issue-meta">
+            <span class="issue-cat">${escHtml(getCatLabel(issue.category))}</span>
+            ${issue.status === 'resolved' ? '<span class="resolved-badge">✓ Resolved</span>' : ''}
+            <span class="issue-date">${formatDate(issue.created_at)}</span>
+          </div>
+          <div class="issue-title">${escHtml(issue.title)}</div>
+          <div class="issue-desc">${escHtml(issue.description)}</div>
+        </div>
+      </div>
+      <div class="issue-card-footer">
+        <button class="comment-toggle" onclick="toggleComments(${issue.id}, this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          ${issue.comment_count} comment${issue.comment_count !== 1 ? 's' : ''}
+        </button>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">▲${issue.upvotes} · ▼${issue.downvotes}</span>
+      </div>
+      <div class="comments-section" id="comments-${issue.id}"></div>
+    `;
+    feed.appendChild(card);
+  });
+}
+
+async function vote(id, type, btn) {
+  const res = await fetch(`/api/issues/${id}/vote`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type})
+  });
+  const data = await res.json();
+  document.getElementById('score-' + id).textContent = data.upvotes - data.downvotes;
+  votedIssues.add(id);
+  saveVoted();
+  showToast(type === 'up' ? '👍 Upvoted!' : '👎 Downvoted!');
+}
+
+async function toggleComments(id, btn) {
+  const section = document.getElementById('comments-' + id);
+  if (section.classList.contains('open')) { section.classList.remove('open'); return; }
+  section.classList.add('open');
+  section.innerHTML = '<div class="loading-spinner" style="padding:24px"><div class="spinner"></div></div>';
+  const res = await fetch(`/api/issues/${id}/comments`);
+  const comments = await res.json();
+  renderComments(section, id, comments);
