@@ -190,7 +190,7 @@ async function loadAdminCategories() {
   adminCategories.forEach(cat => {
     list.innerHTML += `<div style="background:var(--surface2); padding:6px 12px; border-radius:4px; font-size:13px; display:flex; gap:8px;">
       <span>${escHtml(cat.name)}</span>
-      <button style="color:#f87171; background:none; border:none; cursor:pointer" onclick="deleteCategory('${escHtml(cat.value)}')">✕</button>
+      <button style="color:#f87171; background:none; border:none; cursor:pointer" onclick="deleteCategory(${cat.id})">✕</button>
     </div>`;
   });
 }
@@ -202,9 +202,9 @@ async function addCategory() {
   loadAdminCategories();
 }
 
-async function deleteCategory(val) {
+async function deleteCategory(id) {
   if (!confirm('Delete category?')) return;
-  await fetch('/api/admin/categories/' + val, { method: 'DELETE', headers: authHeaders() });
+  await fetch('/api/admin/categories/' + id, { method: 'DELETE', headers: authHeaders() });
   loadAdminCategories();
 }
 
