@@ -3,32 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Open Floor | Community Feed</title>
+    <title>The Open Floor</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="main-header">
-        <h1>The Open Floor</h1>
-        <p>Live Community Issues</p>
+        <div class="header-content">
+            <h1>The Open Floor</h1>
+            <p>Community-led transparency and change.</p>
+        </div>
     </header>
 
-    <div class="container">
+    <div class="main-layout">
+        <!-- New Sidebar Design -->
         <aside class="sidebar">
-            <h3>Categories</h3>
-            <nav id="category-list">
-                <!-- Categories from Postgres will appear here -->
-            </nav>
+            <div class="sidebar-box">
+                <h3>Explore</h3>
+                <nav class="cat-nav" id="category-list">
+                    <!-- Live categories injected here[cite: 2] -->
+                </nav>
+            </div>
         </aside>
 
-        <main class="content">
-            <div id="q-li" class="feed">
-                <p>Connecting to database...</p>
+        <!-- New Feed Design -->
+        <main class="feed-container">
+            <div class="feed-header">
+                <h2>Active Issues</h2>
+                <div class="stats" id="issue-stats">Loading...</div>
+            </div>
+            
+            <div id="q-li" class="issue-list">
+                <!-- Live issues injected here -->
             </div>
         </main>
     </div>
 
     <script>
-        // Use the same fingerprint logic to match your backend's voting rules[cite: 2]
+        const votedIssues = new Set(JSON.parse(localStorage.getItem('votedIssues') || '[]'));
+
         function getFingerprint() {
             let fp = localStorage.getItem('deviceFingerprint');
             if (!fp) {
@@ -38,51 +50,53 @@
             return fp;
         }
 
-        const votedIssues = new Set(JSON.parse(localStorage.getItem('votedIssues') || '[]'));
-
-        async function loadData() {
+        async function init() {
             try {
                 const [catRes, issueRes] = await Promise.all([
                     fetch('/api/categories'),
-                    fetch('/api/issues') // This route only returns 'resolved' or 'open' issues
+                    fetch('/api/issues')
                 ]);
-                
                 const categories = await catRes.json();
                 const issues = await issueRes.json();
 
-                // Render Categories
+                // Update Categories[cite: 2]
                 document.getElementById('category-list').innerHTML = categories.map(c => 
-                    `<button class="filter-btn">${c.name}</button>`
+                    `<button class="cat-item">${c.name}</button>`
                 ).join('');
 
-                // Render Issues
-                const feed = document.getElementById('q-li');
+                // Update Stats
+                document.getElementById('issue-stats').textContent = `${issues.length} Issues Live`;
+
+                // Update Feed
+                const list = document.getElementById('q-li');
                 if (issues.length === 0) {
-                    feed.innerHTML = '<p>No issues found.</p>';
+                    list.innerHTML = `<div class="empty">No approved issues yet. Check back soon!</div>`;
                     return;
                 }
 
-                feed.innerHTML = issues.map(issue => {
-                    const hasVoted = votedIssues.has(issue.id);
+                list.innerHTML = issues.map(issue => {
                     const score = (issue.upvotes || 0) - (issue.downvotes || 0);
+                    const hasVoted = votedIssues.has(issue.id);
                     return `
-                        <article class="queue-item">
-                            <div class="queue-meta">
-                                <span class="cat">${issue.category}</span>
+                        <div class="card">
+                            <div class="card-meta">
+                                <span class="badge">${issue.category}</span>
                                 <span>${new Date(issue.created_at).toLocaleDateString()}</span>
                             </div>
-                            <h3>${issue.title}</h3>
-                            <p>${issue.description}</p>
-                            <div class="queue-actions">
-                                <button class="qbtn" onclick="vote(${issue.id}, 'up')" ${hasVoted ? 'disabled' : ''}>Upvote</button>
-                                <span class="score" id="score-${issue.id}">${score}</span>
-                                <button class="qbtn reject" onclick="vote(${issue.id}, 'down')" ${hasVoted ? 'disabled' : ''}>Downvote</button>
+                            <h3 class="card-title">${issue.title}</h3>
+                            <p class="card-desc">${issue.description}</p>
+                            <div class="card-footer">
+                                <div class="vote-controls">
+                                    <button class="v-btn up" onclick="vote(${issue.id}, 'up')" ${hasVoted ? 'disabled' : ''}>▲</button>
+                                    <span class="v-score" id="score-${issue.id}">${score}</span>
+                                    <button class="v-btn down" onclick="vote(${issue.id}, 'down')" ${hasVoted ? 'disabled' : ''}>▼</button>
+                                </div>
                             </div>
-                        </article>
+                        </div>
                     `;
                 }).join('');
-            } catch (err) {
-                console.error("Database connection failed:", err);
+            } catch (e) {
+                console.error("Connection failed", e);
             }
         }
 
@@ -97,10 +111,11 @@
                 votedIssues.add(id);
                 localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
                 document.getElementById(`score-${id}`).textContent = data.upvotes - data.downvotes;
+                init(); // Refresh to disable buttons
             }
         }
 
-        window.onload = loadData;
+        window.onload = init;
     </script>
 </body>
 </html>
