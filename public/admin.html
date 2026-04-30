@@ -3,63 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Approval | The Open Floor</title>
+    <title>Editor's Desk | Admin</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <header class="main-header">
-        <h1>Editor's Desk</h1>
-        <p>Reviewing Pending Submissions</p>
+<body class="admin-page">
+    <header class="admin-header">
+        <div class="container">
+            <h1>Editor's Desk</h1>
+            <p>Reviewing community voices.</p>
+        </div>
     </header>
 
     <div class="container">
-        <div class="admin-nav">
-            <button onclick="filter('open')">Pending (<span id="count-pi">0</span>)</button>
-            <button onclick="filter('resolved')">Live (<span id="count-li">0</span>)</button>
+        <!-- New Admin Tabs -->
+        <div class="admin-tabs">
+            <button class="tab active" id="tab-p" onclick="switchTab('open')">Pending Submission (<span id="count-pi">0</span>)</button>
+            <button class="tab" id="tab-l" onclick="switchTab('resolved')">Live on Site (<span id="count-li">0</span>)</button>
         </div>
 
-        <div id="admin-feed" class="feed">
-            <p>Authenticating...</p>
+        <div id="admin-list" class="admin-list">
+            <!-- Dynamic items[cite: 1] -->
         </div>
     </div>
 
     <script>
-        // Hardcoded credentials to match your server.js middleware[cite: 1]
-        const HEADERS = {
-            'Content-Type': 'application/json',
+        // Official Credentials for your server.js[cite: 1]
+        const AUTH = {
             'username': 'supieeewupieee',
-            'password': '1.e4c5!2.Nf6d5'
+            'password': '1.e4c5!2.Nf6d5',
+            'Content-Type': 'application/json'
         };
 
-        let allIssues = [];
+        let currentStatus = 'open';
+        let allData = [];
 
-        async function fetchAdminData() {
-            const res = await fetch('/api/admin/issues', { headers: HEADERS });
-            if (!res.ok) {
-                document.body.innerHTML = "<h1>Unauthorized Access</h1>";
-                return;
+        async function loadAdmin() {
+            try {
+                const res = await fetch('/api/admin/issues', { headers: AUTH });
+                if (!res.ok) throw new Error();
+                allData = await res.json();
+                refreshUI();
+            } catch {
+                document.body.innerHTML = "<h1>Access Denied</h1>";
             }
-            allIssues = await res.json();
-            updateCounts();
-            renderQueue('open');
         }
 
-        function updateCounts() {
-            document.getElementById('count-pi').textContent = allIssues.filter(i => i.status === 'open').length;
-            document.getElementById('count-li').textContent = allIssues.filter(i => i.status === 'resolved').length;
-        }
+        function refreshUI() {
+            const pending = allData.filter(i => i.status === 'open');
+            const live = allData.filter(i => i.status === 'resolved');
 
-        function renderQueue(status) {
-            const container = document.getElementById('admin-feed');
-            const items = allIssues.filter(i => i.status === status);
-            
-            container.innerHTML = items.map(issue => `
-                <div class="queue-item">
-                    <h3>${issue.title}</h3>
-                    <p>${issue.description}</p>
-                    <div class="admin-controls">
-                        ${issue.status === 'open' ? `<button class="qbtn" onclick="updateStatus(${issue.id}, 'resolved')">Approve</button>` : ''}
-                        <button class="qbtn reject" onclick="deleteIssue(${issue.id})">Delete</button>
+            document.getElementById('count-pi').textContent = pending.length;
+            document.getElementById('count-li').textContent = live.length;
+
+            const list = document.getElementById('admin-list');
+            const displayItems = allData.filter(i => i.status === currentStatus);
+
+            list.innerHTML = displayItems.map(item => `
+                <div class="admin-card">
+                    <div class="admin-body">
+                        <span class="tag">${item.category}</span>
+                        <h3>${item.title}</h3>
+                        <p>${item.description}</p>
+                    </div>
+                    <div class="admin-actions">
+                        ${item.status === 'open' ? 
+                            `<button class="btn approve" onclick="updateStatus(${item.id}, 'resolved')">Approve & Publish</button>` : ''
+                        }
+                        <button class="btn delete" onclick="remove(${item.id})">Delete</button>
                     </div>
                 </div>
             `).join('');
@@ -68,19 +78,27 @@
         async function updateStatus(id, status) {
             await fetch(`/api/admin/issues/${id}/status`, {
                 method: 'PATCH',
-                headers: HEADERS,
+                headers: AUTH,
                 body: JSON.stringify({ status })
             });
-            fetchAdminData();
+            loadAdmin();
         }
 
-        async function deleteIssue(id) {
-            if (!confirm("Permanently delete?")) return;
-            await fetch(`/api/admin/issues/${id}`, { method: 'DELETE', headers: HEADERS });
-            fetchAdminData();
+        async function remove(id) {
+            if (confirm("Delete this issue forever?")) {
+                await fetch(`/api/admin/issues/${id}`, { method: 'DELETE', headers: AUTH });
+                loadAdmin();
+            }
         }
 
-        window.onload = fetchAdminData;
+        function switchTab(status) {
+            currentStatus = status;
+            document.getElementById('tab-p').classList.toggle('active', status === 'open');
+            document.getElementById('tab-l').classList.toggle('active', status === 'resolved');
+            refreshUI();
+        }
+
+        window.onload = loadAdmin;
     </script>
 </body>
 </html>
