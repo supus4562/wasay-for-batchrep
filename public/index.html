@@ -205,32 +205,27 @@
                 const score = (issue.upvotes || 0) - (issue.downvotes || 0);
                 const voteState = votedIssues.has(issue.id + '-up') ? 'up' : votedIssues.has(issue.id + '-down') ? 'down' : null;
                 const statusClass = issue.status || 'open';
-                const statusLabel = statusClass === 'open' ? 'Awaiting Solution Proposal' : 'Solution Posted';
-                const date = new Date(issue.created_at).toLocaleDateString('en-GB', {
-                    day: 'numeric', month: 'short', year: 'numeric'
-                });
                 const cc = issue.comment_count || 0;
 
                 return `
                     <div class="card">
                         <div class="card-meta">
                             <span class="badge">${issue.category}</span>
-                            <span class="status-badge ${statusClass}">${statusLabel}</span>
-                            <span>${date}</span>
+                            ${statusClass === 'resolved' ? '<span class="status-badge resolved">Solution Posted</span>' : ''}
                         </div>
                         <h3 class="card-title">${issue.title}</h3>
                         <p class="card-desc">${issue.description}</p>
                         <div class="card-footer">
                             <div class="vote-controls" id="vc-${issue.id}">
-                                <button class="v-btn up ${voteState === 'up' ? 'voted' : ''}" onclick="vote(${issue.id}, 'up')" ${voteState === 'up' ? 'disabled' : ''} aria-label="Upvote">
+                                <button class="v-btn up ${voteState === 'up' ? 'voted' : ''}" onclick="vote(${issue.id}, 'up')" aria-label="Upvote">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
                                 </button>
                                 <span class="v-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : ''}" id="score-${issue.id}">${score}</span>
-                                <button class="v-btn down ${voteState === 'down' ? 'voted' : ''}" onclick="vote(${issue.id}, 'down')" ${voteState === 'down' ? 'disabled' : ''} aria-label="Downvote">
+                                <button class="v-btn down ${voteState === 'down' ? 'voted' : ''}" onclick="vote(${issue.id}, 'down')" aria-label="Downvote">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
                                 </button>
                             </div>
-                            ${cc > 0 ? `<button class="view-responses-btn" onclick="toggleResponses(${issue.id})">View ${cc} response${cc !== 1 ? 's' : ''}</button>` : `<span class="comment-count">No responses yet</span>`}
+                            ${cc > 0 ? `<button class="view-responses-btn" onclick="toggleResponses(${issue.id})">View ${cc} response${cc !== 1 ? 's' : ''}</button>` : ``}
                         </div>
                         <div class="response-section" id="responses-${issue.id}" style="display:none;"></div>
                     </div>
@@ -260,7 +255,7 @@
             } catch { el.innerHTML = '<p style="font-size:0.75rem;color:#e2001a;">Failed to load responses.</p>'; }
         }
 
-        /* ---- Voting (optimistic, instant UI, switchable) ---- */
+        /* ---- Voting (optimistic, instant UI, switchable & un-votable) ---- */
         async function vote(id, type) {
             const scoreEl = document.getElementById(`score-${id}`);
             const vc = document.getElementById(`vc-${id}`);
@@ -273,14 +268,19 @@
             const oldDown = issue.downvotes || 0;
             const prevVote = votedIssues.has(id + '-up') ? 'up' : votedIssues.has(id + '-down') ? 'down' : null;
 
-            // If clicking the same vote direction, do nothing
-            if (prevVote === type) return;
+            let actionType = type;
+            if (prevVote === type) {
+                actionType = 'unvote';
+            }
 
             // Optimistic update
-            if (prevVote) {
+            if (actionType === 'unvote') {
+                if (prevVote === 'up') issue.upvotes = Math.max(0, oldUp - 1);
+                else issue.downvotes = Math.max(0, oldDown - 1);
+            } else if (prevVote) {
                 // Switching vote: undo old, apply new
-                if (prevVote === 'up') issue.upvotes = oldUp - 1;
-                else issue.downvotes = oldDown - 1;
+                if (prevVote === 'up') issue.upvotes = Math.max(0, oldUp - 1);
+                else issue.downvotes = Math.max(0, oldDown - 1);
                 if (type === 'up') issue.upvotes = (issue.upvotes || 0) + 1;
                 else issue.downvotes = (issue.downvotes || 0) + 1;
             } else {
@@ -301,19 +301,22 @@
             // Update button states
             upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
             vc.classList.remove('voted-up', 'voted-down');
-            if (type === 'up') { upBtn.classList.add('voted'); upBtn.disabled = true; downBtn.disabled = false; vc.classList.add('voted-up'); }
-            else { downBtn.classList.add('voted'); downBtn.disabled = true; upBtn.disabled = false; vc.classList.add('voted-down'); }
+            
+            if (actionType !== 'unvote') {
+                if (type === 'up') { upBtn.classList.add('voted'); vc.classList.add('voted-up'); }
+                else { downBtn.classList.add('voted'); vc.classList.add('voted-down'); }
+            }
 
             // Update local storage
             if (prevVote) votedIssues.delete(id + '-' + prevVote);
-            votedIssues.add(id + '-' + type);
+            if (actionType !== 'unvote') votedIssues.add(id + '-' + type);
             localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
 
             try {
                 const res = await fetch(`/api/issues/${id}/vote`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type, fingerprint: getFingerprint() })
+                    body: JSON.stringify({ type: actionType, fingerprint: getFingerprint() })
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -323,37 +326,24 @@
                     scoreEl.textContent = confirmed;
                     scoreEl.className = `v-score ${confirmed > 0 ? 'positive' : confirmed < 0 ? 'negative' : ''}`;
                 } else {
-                    // Rollback
-                    issue.upvotes = oldUp;
-                    issue.downvotes = oldDown;
-                    const rollback = oldUp - oldDown;
-                    scoreEl.textContent = rollback;
-                    scoreEl.className = `v-score ${rollback > 0 ? 'positive' : rollback < 0 ? 'negative' : ''}`;
-                    // Restore previous button state
-                    upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
-                    upBtn.disabled = false; downBtn.disabled = false;
-                    vc.classList.remove('voted-up', 'voted-down');
-                    votedIssues.delete(id + '-' + type);
-                    if (prevVote) {
-                        votedIssues.add(id + '-' + prevVote);
-                        if (prevVote === 'up') { upBtn.classList.add('voted'); upBtn.disabled = true; vc.classList.add('voted-up'); }
-                        else { downBtn.classList.add('voted'); downBtn.disabled = true; vc.classList.add('voted-down'); }
-                    }
-                    localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
+                    throw new Error('Vote failed server-side');
                 }
             } catch (e) {
-                // Rollback on network error
+                // Rollback on network error or rejection
                 issue.upvotes = oldUp;
                 issue.downvotes = oldDown;
-                scoreEl.textContent = oldUp - oldDown;
+                const rollback = oldUp - oldDown;
+                scoreEl.textContent = rollback;
+                scoreEl.className = `v-score ${rollback > 0 ? 'positive' : rollback < 0 ? 'negative' : ''}`;
+                
                 upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
-                upBtn.disabled = false; downBtn.disabled = false;
                 vc.classList.remove('voted-up', 'voted-down');
+                
                 votedIssues.delete(id + '-' + type);
                 if (prevVote) {
                     votedIssues.add(id + '-' + prevVote);
-                    if (prevVote === 'up') { upBtn.classList.add('voted'); upBtn.disabled = true; vc.classList.add('voted-up'); }
-                    else { downBtn.classList.add('voted'); downBtn.disabled = true; vc.classList.add('voted-down'); }
+                    if (prevVote === 'up') { upBtn.classList.add('voted'); vc.classList.add('voted-up'); }
+                    else { downBtn.classList.add('voted'); vc.classList.add('voted-down'); }
                 }
                 localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
                 console.error('Vote failed:', e);

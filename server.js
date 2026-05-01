@@ -55,6 +55,12 @@ async function initDB() {
       );
     `);
 
+    // Add vote_type column if it doesn't exist (for existing databases)
+    try {
+      await pool.query("ALTER TABLE voter_fingerprints ADD COLUMN vote_type TEXT NOT NULL DEFAULT 'up'");
+    } catch (err) {
+      // column likely already exists, ignore
+    }
   
     console.log('Database initialized successfully.');
   } catch (err) {
@@ -109,7 +115,7 @@ app.get('/api/issues', async (req, res) => {
     query += ` AND i.status = $${paramIndex++}`; 
     params.push(status); 
   }
-  query += ' ORDER BY i.created_at DESC';
+  query += ' ORDER BY (i.upvotes - i.downvotes) DESC, i.created_at DESC';
   
   const { rows } = await pool.query(query, params);
   // Postgres returns COUNT as a string, parse it for the frontend
@@ -136,7 +142,7 @@ app.post('/api/issues', async (req, res) => {
 
 app.post('/api/issues/:id/vote', async (req, res) => {
   const { type, fingerprint } = req.body;
-  if (!['up', 'down'].includes(type)) return res.status(400).json({ error: 'Invalid vote' });
+  if (!['up', 'down', 'unvote'].includes(type)) return res.status(400).json({ error: 'Invalid vote' });
   if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
 
   // Check if this device already voted on this issue
@@ -144,6 +150,17 @@ app.post('/api/issues/:id/vote', async (req, res) => {
     'SELECT vote_type FROM voter_fingerprints WHERE fingerprint = $1 AND issue_id = $2',
     [fingerprint, req.params.id]
   );
+
+  if (type === 'unvote') {
+    if (existing.rows.length > 0) {
+      const oldType = existing.rows[0].vote_type;
+      const col = oldType === 'up' ? 'upvotes' : 'downvotes';
+      await pool.query(`UPDATE issues SET ${col} = GREATEST(${col} - 1, 0) WHERE id = $1`, [req.params.id]);
+      await pool.query('DELETE FROM voter_fingerprints WHERE fingerprint = $1 AND issue_id = $2', [fingerprint, req.params.id]);
+    }
+    const { rows } = await pool.query('SELECT upvotes, downvotes FROM issues WHERE id = $1', [req.params.id]);
+    return res.json(rows[0]);
+  }
 
   if (existing.rows.length > 0) {
     const oldType = existing.rows[0].vote_type;
