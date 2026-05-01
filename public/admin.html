@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor's Desk | Admin Panel</title>
+    <title>Editor's Desk | Admin</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin-page">
 
-    <!-- ======================== LOGIN GATE ======================== -->
+    <!-- LOGIN GATE -->
     <div id="login-gate" class="login-gate">
         <div class="login-box">
             <h1>Editor's Desk</h1>
@@ -28,178 +28,241 @@
         </div>
     </div>
 
-    <!-- ======================== ADMIN PANEL (hidden until login) ======================== -->
+    <!-- ADMIN PANEL -->
     <div id="admin-panel" style="display:none;">
-
         <header class="admin-header">
             <div class="container" style="display:flex;align-items:center;justify-content:space-between;">
-                <div>
-                    <h1>Editor's Desk</h1>
-                    <p>Reviewing community voices.</p>
-                </div>
-                <a href="/" style="color:#e2001a;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;text-decoration:none;">← Back to Forum</a>
+                <div><h1>Editor's Desk</h1><p>Full admin control.</p></div>
+                <a href="/" style="color:#e2001a;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;text-decoration:none;">← Forum</a>
             </div>
         </header>
 
         <div class="container">
-            <!-- Admin Tabs: Pending / Approved (Open) / Resolved -->
+            <!-- CATEGORY MANAGEMENT -->
+            <div class="admin-section" id="cat-section">
+                <h2 class="section-title">Category Management</h2>
+                <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                    <input type="text" id="cat-name" placeholder="Display Name" style="flex:1;min-width:120px;padding:10px 14px;border:1.5px solid #0a0a0a;font-family:inherit;font-size:0.8rem;">
+                    <input type="text" id="cat-value" placeholder="slug-value" style="flex:1;min-width:120px;padding:10px 14px;border:1.5px solid #0a0a0a;font-family:inherit;font-size:0.8rem;">
+                    <button class="btn approve" onclick="addCategory()">+ Add</button>
+                </div>
+                <div id="cat-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            </div>
+
+            <!-- ISSUE TABS -->
             <div class="admin-tabs">
-                <button class="tab active" id="tab-pending" onclick="switchTab('pending')">
-                    Pending Review (<span id="count-pending">0</span>)
-                </button>
-                <button class="tab" id="tab-open" onclick="switchTab('open')">
-                    Approved — Live (<span id="count-open">0</span>)
-                </button>
-                <button class="tab" id="tab-resolved" onclick="switchTab('resolved')">
-                    Resolved (<span id="count-resolved">0</span>)
-                </button>
+                <button class="tab active" id="tab-pending" onclick="switchTab('pending')">Pending (<span id="count-pending">0</span>)</button>
+                <button class="tab" id="tab-open" onclick="switchTab('open')">Live (<span id="count-open">0</span>)</button>
+                <button class="tab" id="tab-resolved" onclick="switchTab('resolved')">Resolved (<span id="count-resolved">0</span>)</button>
             </div>
 
-            <div id="admin-list" class="admin-list">
-                <!-- Dynamic items -->
-            </div>
+            <div id="admin-list" class="admin-list"></div>
         </div>
-
     </div>
 
     <script>
         let AUTH = {};
         let currentStatus = 'pending';
         let allData = [];
+        let allCats = [];
+        const RESPONDER = 'Wasay M. Jehangiri';
 
         /* ---- Login ---- */
         async function doLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('login-user').value.trim();
-            const pass = document.getElementById('login-pass').value;
-            const errEl = document.getElementById('login-error');
-
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value;
+            const err = document.getElementById('login-error');
             try {
-                const res = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
+                const r = await fetch('/api/admin/login', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({username:u,password:p})
                 });
-                if (res.ok) {
-                    AUTH = {
-                        'username': user,
-                        'password': pass,
-                        'Content-Type': 'application/json'
-                    };
-                    document.getElementById('login-gate').style.display = 'none';
-                    document.getElementById('admin-panel').style.display = 'block';
-                    loadAdmin();
-                } else {
-                    errEl.style.display = 'block';
-                    errEl.textContent = 'Invalid credentials.';
-                }
-            } catch {
-                errEl.style.display = 'block';
-                errEl.textContent = 'Network error.';
+                if (r.ok) {
+                    AUTH = {'username':u,'password':p,'Content-Type':'application/json'};
+                    document.getElementById('login-gate').style.display='none';
+                    document.getElementById('admin-panel').style.display='block';
+                    loadAll();
+                } else { err.style.display='block'; err.textContent='Invalid credentials.'; }
+            } catch { err.style.display='block'; err.textContent='Network error.'; }
+        }
+
+        /* ---- Load ---- */
+        async function loadAll() {
+            const [iRes, cRes] = await Promise.all([
+                fetch('/api/admin/issues', {headers:AUTH}),
+                fetch('/api/categories')
+            ]);
+            allData = await iRes.json();
+            allCats = await cRes.json();
+            renderCats();
+            renderIssues();
+        }
+
+        /* ---- Categories ---- */
+        function renderCats() {
+            document.getElementById('cat-list').innerHTML = allCats.map(c =>
+                `<span class="tag" style="display:inline-flex;align-items:center;gap:6px;">${c.name}
+                    <button onclick="delCat(${c.id})" style="background:none;border:none;color:#e2001a;cursor:pointer;font-weight:900;font-size:1rem;line-height:1;">×</button>
+                </span>`
+            ).join('');
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('cat-name').value.trim();
+            const value = document.getElementById('cat-value').value.trim();
+            if (!name||!value) return alert('Both fields required');
+            await fetch('/api/admin/categories', {method:'POST',headers:AUTH,body:JSON.stringify({name,value})});
+            document.getElementById('cat-name').value='';
+            document.getElementById('cat-value').value='';
+            loadAll();
+        }
+
+        async function delCat(id) {
+            if (confirm('Delete this category?')) {
+                await fetch(`/api/admin/categories/${id}`,{method:'DELETE',headers:AUTH});
+                loadAll();
             }
         }
 
-        /* ---- Load Data ---- */
-        async function loadAdmin() {
-            try {
-                const res = await fetch('/api/admin/issues', { headers: AUTH });
-                if (!res.ok) throw new Error();
-                allData = await res.json();
-                refreshUI();
-            } catch {
-                document.getElementById('admin-panel').innerHTML = '<div class="container"><h2 style="margin-top:40px;">Access Denied</h2></div>';
-            }
-        }
+        /* ---- Issues ---- */
+        function renderIssues() {
+            const p=allData.filter(i=>i.status==='pending'), o=allData.filter(i=>i.status==='open'), r=allData.filter(i=>i.status==='resolved');
+            document.getElementById('count-pending').textContent=p.length;
+            document.getElementById('count-open').textContent=o.length;
+            document.getElementById('count-resolved').textContent=r.length;
 
-        /* ---- Render ---- */
-        function refreshUI() {
-            const pending  = allData.filter(i => i.status === 'pending');
-            const open     = allData.filter(i => i.status === 'open');
-            const resolved = allData.filter(i => i.status === 'resolved');
-
-            document.getElementById('count-pending').textContent  = pending.length;
-            document.getElementById('count-open').textContent     = open.length;
-            document.getElementById('count-resolved').textContent = resolved.length;
-
+            const items = allData.filter(i=>i.status===currentStatus);
             const list = document.getElementById('admin-list');
-            const displayItems = allData.filter(i => i.status === currentStatus);
+            if (!items.length) { list.innerHTML='<div class="empty">No issues here.</div>'; return; }
 
-            if (displayItems.length === 0) {
-                list.innerHTML = '<div class="empty">No issues in this category.</div>';
-                return;
-            }
+            list.innerHTML = items.map(item => {
+                const d = new Date(item.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+                let btns='';
+                if (item.status==='pending') btns=`<button class="btn approve" onclick="setStatus(${item.id},'open')">Approve & Publish</button><button class="btn delete" onclick="del(${item.id})">Reject</button>`;
+                else if (item.status==='open') btns=`<button class="btn approve" onclick="setStatus(${item.id},'resolved')">Mark Resolved</button><button class="btn delete" onclick="setStatus(${item.id},'pending')">Unpublish</button>`;
+                else btns=`<button class="btn approve" onclick="setStatus(${item.id},'open')">Reopen</button><button class="btn delete" onclick="del(${item.id})">Delete</button>`;
 
-            list.innerHTML = displayItems.map(item => {
-                const date = new Date(item.created_at).toLocaleDateString('en-GB', {
-                    day: 'numeric', month: 'short', year: 'numeric'
-                });
-
-                // Build action buttons based on current status
-                let actions = '';
-
-                if (item.status === 'pending') {
-                    actions = `
-                        <button class="btn approve" onclick="updateStatus(${item.id}, 'open')">Approve &amp; Publish</button>
-                        <button class="btn delete" onclick="remove(${item.id})">Reject &amp; Delete</button>
-                    `;
-                } else if (item.status === 'open') {
-                    actions = `
-                        <button class="btn approve" onclick="updateStatus(${item.id}, 'resolved')">Mark Resolved</button>
-                        <button class="btn delete" onclick="updateStatus(${item.id}, 'pending')">Unpublish</button>
-                    `;
-                } else if (item.status === 'resolved') {
-                    actions = `
-                        <button class="btn approve" onclick="updateStatus(${item.id}, 'open')">Reopen</button>
-                        <button class="btn delete" onclick="remove(${item.id})">Delete</button>
-                    `;
-                }
+                const catOpts = allCats.map(c=>`<option value="${c.value}" ${c.value===item.category?'selected':''}>${c.name}</option>`).join('');
 
                 return `
-                    <div class="admin-card">
-                        <div class="admin-body">
-                            <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;">
-                                <span class="tag">${item.category}</span>
-                                <span style="font-size:0.7rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">${date}</span>
+                <div class="admin-card" id="card-${item.id}">
+                    <div class="admin-body" style="width:100%;">
+                        <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap;">
+                            <div style="flex:1;min-width:250px;">
+                                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                                    <span class="tag">${item.category}</span>
+                                    <span style="font-size:0.7rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">${d}</span>
+                                </div>
+                                <h3>${item.title}</h3>
+                                <p>${item.description}</p>
                             </div>
-                            <h3>${item.title}</h3>
-                            <p>${item.description}</p>
-                            <div style="margin-top:8px;font-size:0.72rem;color:#b0b0b0;">
-                                ▲ ${item.upvotes || 0} &nbsp; ▼ ${item.downvotes || 0} &nbsp; 💬 ${item.comment_count || 0}
+                            <div class="admin-actions">${btns}</div>
+                        </div>
+
+                        <!-- EDIT SECTION -->
+                        <details class="edit-toggle" style="margin-top:16px;">
+                            <summary class="edit-summary">Edit Issue</summary>
+                            <div style="display:grid;gap:10px;margin-top:12px;">
+                                <div class="form-group"><label>Title</label>
+                                    <input type="text" id="ed-t-${item.id}" value="${item.title.replace(/"/g,'&quot;')}">
+                                </div>
+                                <div class="form-group"><label>Category</label>
+                                    <select id="ed-c-${item.id}">${catOpts}</select>
+                                </div>
+                                <div class="form-group"><label>Description</label>
+                                    <textarea id="ed-d-${item.id}" rows="3">${item.description}</textarea>
+                                </div>
+                                <div style="display:flex;gap:10px;">
+                                    <div class="form-group" style="flex:1;"><label>Upvotes</label>
+                                        <input type="number" id="ed-u-${item.id}" value="${item.upvotes||0}" min="0">
+                                    </div>
+                                    <div class="form-group" style="flex:1;"><label>Downvotes</label>
+                                        <input type="number" id="ed-dv-${item.id}" value="${item.downvotes||0}" min="0">
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn approve" onclick="saveEdit(${item.id})">Save Changes</button>
+                                    <button class="btn approve" onclick="saveVotes(${item.id})">Update Votes</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="admin-actions">
-                            ${actions}
-                        </div>
+                        </details>
+
+                        <!-- RESPOND SECTION -->
+                        <details class="edit-toggle" style="margin-top:10px;">
+                            <summary class="edit-summary">Respond as ${RESPONDER}</summary>
+                            <div style="margin-top:12px;">
+                                <div id="comments-${item.id}" style="margin-bottom:12px;"></div>
+                                <div class="form-group">
+                                    <label>Your Response</label>
+                                    <textarea id="resp-${item.id}" rows="3" placeholder="Write a public response…"></textarea>
+                                </div>
+                                <button class="btn approve" onclick="respond(${item.id})">Post Response</button>
+                                <button class="btn delete" style="margin-left:6px;" onclick="loadComments(${item.id})">Load Comments</button>
+                            </div>
+                        </details>
                     </div>
-                `;
+                </div>`;
             }).join('');
         }
 
         /* ---- Actions ---- */
-        async function updateStatus(id, status) {
-            await fetch(`/api/admin/issues/${id}/status`, {
-                method: 'PATCH',
-                headers: AUTH,
-                body: JSON.stringify({ status })
-            });
-            loadAdmin();
+        async function setStatus(id,s){ await fetch(`/api/admin/issues/${id}/status`,{method:'PATCH',headers:AUTH,body:JSON.stringify({status:s})}); loadAll(); }
+        async function del(id){ if(confirm('Delete permanently?')){ await fetch(`/api/admin/issues/${id}`,{method:'DELETE',headers:AUTH}); loadAll(); }}
+
+        async function saveEdit(id){
+            const title=document.getElementById(`ed-t-${id}`).value.trim();
+            const category=document.getElementById(`ed-c-${id}`).value;
+            const description=document.getElementById(`ed-d-${id}`).value.trim();
+            await fetch(`/api/admin/issues/${id}`,{method:'PATCH',headers:AUTH,body:JSON.stringify({title,description,category})});
+            loadAll();
         }
 
-        async function remove(id) {
-            if (confirm('Delete this issue permanently?')) {
-                await fetch(`/api/admin/issues/${id}`, { method: 'DELETE', headers: AUTH });
-                loadAdmin();
-            }
+        async function saveVotes(id){
+            const upvotes=parseInt(document.getElementById(`ed-u-${id}`).value)||0;
+            const downvotes=parseInt(document.getElementById(`ed-dv-${id}`).value)||0;
+            await fetch(`/api/admin/issues/${id}/votes`,{method:'PATCH',headers:AUTH,body:JSON.stringify({upvotes,downvotes})});
+            loadAll();
         }
 
-        /* ---- Tab Switching ---- */
-        function switchTab(status) {
-            currentStatus = status;
-            document.querySelectorAll('.admin-tabs .tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${status}`).classList.add('active');
-            refreshUI();
+        async function respond(id){
+            const body=document.getElementById(`resp-${id}`).value.trim();
+            if(!body) return alert('Write a response first');
+            await fetch(`/api/issues/${id}/comments`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({author:RESPONDER,body})});
+            document.getElementById(`resp-${id}`).value='';
+            loadComments(id);
+        }
+
+        async function loadComments(id){
+            const r = await fetch(`/api/admin/issues/${id}/comments`,{headers:AUTH});
+            const comments = await r.json();
+            const el = document.getElementById(`comments-${id}`);
+            if(!comments.length){ el.innerHTML='<p style="font-size:0.75rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">No comments yet.</p>'; return; }
+            el.innerHTML = comments.map(c => {
+                const isOfficial = c.author===RESPONDER;
+                const hidden = c.hidden ? ' (HIDDEN)' : '';
+                return `<div style="padding:10px;border:1px solid ${isOfficial?'#e2001a':'#e8e8e8'};margin-bottom:6px;background:${isOfficial?'#fff0f0':'#f5f5f5'};">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <strong style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:${isOfficial?'#e2001a':'#3a3a3a'};">${c.author}${hidden}</strong>
+                        <div style="display:flex;gap:4px;">
+                            <button onclick="toggleVis(${c.id},${c.hidden?0:1},${id})" style="font-size:0.65rem;padding:3px 8px;border:1px solid #b0b0b0;background:none;cursor:pointer;">${c.hidden?'Show':'Hide'}</button>
+                            <button onclick="delComment(${c.id},${id})" style="font-size:0.65rem;padding:3px 8px;border:1px solid #e2001a;color:#e2001a;background:none;cursor:pointer;">Del</button>
+                        </div>
+                    </div>
+                    <p style="font-size:0.8rem;margin-top:4px;color:#3a3a3a;line-height:1.5;">${c.body}</p>
+                </div>`;
+            }).join('');
+        }
+
+        async function toggleVis(cid,hide,iid){ await fetch(`/api/admin/comments/${cid}/visibility`,{method:'PATCH',headers:AUTH,body:JSON.stringify({hidden:hide})}); loadComments(iid); }
+        async function delComment(cid,iid){ if(confirm('Delete comment?')){ await fetch(`/api/admin/comments/${cid}`,{method:'DELETE',headers:AUTH}); loadComments(iid); }}
+
+        function switchTab(s){
+            currentStatus=s;
+            document.querySelectorAll('.admin-tabs .tab').forEach(t=>t.classList.remove('active'));
+            document.getElementById(`tab-${s}`).classList.add('active');
+            renderIssues();
         }
     </script>
-
 </body>
 </html>

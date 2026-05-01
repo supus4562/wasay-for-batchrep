@@ -814,6 +814,102 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================================================================
+   ADMIN SECTIONS & EDIT TOGGLES
+   =================================================================== */
+.admin-section {
+  margin: var(--sp-4) 0 var(--sp-3);
+  padding: var(--sp-3);
+  border: var(--border);
+  background: var(--white);
+}
+
+.section-title {
+  font-size: var(--fs-sm);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--sp-2);
+  padding-bottom: var(--sp-1);
+  border-bottom: 2px solid var(--black);
+}
+
+.edit-toggle { border-top: 1px solid var(--light-gray); padding-top: 12px; }
+
+.edit-summary {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--dark-gray);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.edit-summary::-webkit-details-marker { display: none; }
+.edit-summary::before { content: '▸ '; }
+details[open] > .edit-summary::before { content: '▾ '; }
+.edit-summary:hover { color: var(--red); }
+
+/* ===================================================================
+   PUBLIC RESPONSE DISPLAY
+   =================================================================== */
+.response-section {
+  margin-top: var(--sp-2);
+  border-top: 1px solid var(--light-gray);
+  padding-top: var(--sp-2);
+}
+
+.response-item {
+  padding: var(--sp-2);
+  margin-bottom: 6px;
+  border-left: 3px solid var(--light-gray);
+  background: var(--off-white);
+}
+
+.response-item.official {
+  border-left-color: var(--red);
+  background: var(--red-light);
+}
+
+.response-author {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--dark-gray);
+}
+
+.response-item.official .response-author { color: var(--red); }
+
+.response-body {
+  font-size: var(--fs-sm);
+  color: var(--dark-gray);
+  line-height: 1.55;
+  margin-top: 4px;
+}
+
+.response-date {
+  font-size: 0.65rem;
+  color: var(--mid-gray);
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.view-responses-btn {
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--red);
+  cursor: pointer;
+  padding: 0;
+}
+.view-responses-btn:hover { text-decoration: underline; }
+
+/* ===================================================================
    RESPONSIVE
    =================================================================== */
 @media (max-width: 768px) {

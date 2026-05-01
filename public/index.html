@@ -236,10 +236,11 @@
                 const score = (issue.upvotes || 0) - (issue.downvotes || 0);
                 const hasVoted = votedIssues.has(issue.id);
                 const statusClass = issue.status || 'open';
-                const statusLabel = statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+                const statusLabel = statusClass === 'open' ? 'Awaiting Response' : 'Addressed';
                 const date = new Date(issue.created_at).toLocaleDateString('en-GB', {
                     day: 'numeric', month: 'short', year: 'numeric'
                 });
+                const cc = issue.comment_count || 0;
 
                 return `
                     <div class="card">
@@ -256,11 +257,33 @@
                                 <span class="v-score" id="score-${issue.id}">${score}</span>
                                 <button class="v-btn down" onclick="vote(${issue.id}, 'down')" ${hasVoted ? 'disabled' : ''}>▼</button>
                             </div>
-                            <span class="comment-count">${issue.comment_count || 0} comment${(issue.comment_count || 0) !== 1 ? 's' : ''}</span>
+                            ${cc > 0 ? `<button class="view-responses-btn" onclick="toggleResponses(${issue.id})">View ${cc} response${cc !== 1 ? 's' : ''}</button>` : `<span class="comment-count">No responses yet</span>`}
                         </div>
+                        <div class="response-section" id="responses-${issue.id}" style="display:none;"></div>
                     </div>
                 `;
             }).join('');
+        }
+
+        /* ---- Load & Toggle Responses ---- */
+        async function toggleResponses(id) {
+            const el = document.getElementById(`responses-${id}`);
+            if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+            el.style.display = 'block';
+            el.innerHTML = '<p style="font-size:0.75rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">Loading…</p>';
+            try {
+                const res = await fetch(`/api/issues/${id}/comments`);
+                const comments = await res.json();
+                if (!comments.length) { el.innerHTML = '<p style="font-size:0.75rem;color:#b0b0b0;">No visible responses.</p>'; return; }
+                el.innerHTML = comments.map(c => {
+                    const isOfficial = c.author === 'Wasay M. Jehangiri';
+                    const d = new Date(c.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+                    return `<div class="response-item ${isOfficial ? 'official' : ''}">
+                        <span class="response-author">${c.author}</span><span class="response-date">${d}</span>
+                        <p class="response-body">${c.body}</p>
+                    </div>`;
+                }).join('');
+            } catch { el.innerHTML = '<p style="font-size:0.75rem;color:#e2001a;">Failed to load responses.</p>'; }
         }
 
         /* ---- Voting ---- */
