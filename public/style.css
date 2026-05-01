@@ -771,6 +771,49 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================================================================
+   ADMIN LOGIN GATE
+   =================================================================== */
+.login-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--black);
+  padding: var(--sp-3);
+}
+
+.login-box {
+  background: var(--white);
+  padding: var(--sp-5);
+  border: var(--border);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 8px 8px 0 var(--red);
+}
+
+.login-box h1 {
+  font-size: var(--fs-xl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+
+.login-box > p {
+  font-size: var(--fs-sm);
+  color: var(--mid-gray);
+  margin-bottom: var(--sp-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.login-box form {
+  border-top: 3px solid var(--black);
+  padding-top: var(--sp-3);
+}
+
+/* ===================================================================
    RESPONSIVE
    =================================================================== */
 @media (max-width: 768px) {

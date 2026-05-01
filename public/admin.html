@@ -3,40 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor's Desk | Admin</title>
+    <title>Editor's Desk | Admin Panel</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin-page">
-    <header class="admin-header">
-        <div class="container">
+
+    <!-- ======================== LOGIN GATE ======================== -->
+    <div id="login-gate" class="login-gate">
+        <div class="login-box">
             <h1>Editor's Desk</h1>
-            <p>Reviewing community voices.</p>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- New Admin Tabs -->
-        <div class="admin-tabs">
-            <button class="tab active" id="tab-p" onclick="switchTab('open')">Pending Submission (<span id="count-pi">0</span>)</button>
-            <button class="tab" id="tab-l" onclick="switchTab('resolved')">Live on Site (<span id="count-li">0</span>)</button>
-        </div>
-
-        <div id="admin-list" class="admin-list">
-            <!-- Dynamic items[cite: 1] -->
+            <p>Admin access required.</p>
+            <form onsubmit="doLogin(event)">
+                <div class="form-group">
+                    <label for="login-user">Username</label>
+                    <input type="text" id="login-user" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="login-pass">Password</label>
+                    <input type="password" id="login-pass" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-primary" id="login-btn">Log In</button>
+                <div class="form-msg error" id="login-error" style="display:none;"></div>
+            </form>
         </div>
     </div>
 
-    <script>
-        // Official Credentials for your server.js[cite: 1]
-        const AUTH = {
-            'username': 'supieeewupieee',
-            'password': '1.e4c5!2.Nf6d5',
-            'Content-Type': 'application/json'
-        };
+    <!-- ======================== ADMIN PANEL (hidden until login) ======================== -->
+    <div id="admin-panel" style="display:none;">
 
-        let currentStatus = 'open';
+        <header class="admin-header">
+            <div class="container" style="display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <h1>Editor's Desk</h1>
+                    <p>Reviewing community voices.</p>
+                </div>
+                <a href="/" style="color:#e2001a;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;text-decoration:none;">← Back to Forum</a>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Admin Tabs: Pending / Approved (Open) / Resolved -->
+            <div class="admin-tabs">
+                <button class="tab active" id="tab-pending" onclick="switchTab('pending')">
+                    Pending Review (<span id="count-pending">0</span>)
+                </button>
+                <button class="tab" id="tab-open" onclick="switchTab('open')">
+                    Approved — Live (<span id="count-open">0</span>)
+                </button>
+                <button class="tab" id="tab-resolved" onclick="switchTab('resolved')">
+                    Resolved (<span id="count-resolved">0</span>)
+                </button>
+            </div>
+
+            <div id="admin-list" class="admin-list">
+                <!-- Dynamic items -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let AUTH = {};
+        let currentStatus = 'pending';
         let allData = [];
 
+        /* ---- Login ---- */
+        async function doLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            const errEl = document.getElementById('login-error');
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                if (res.ok) {
+                    AUTH = {
+                        'username': user,
+                        'password': pass,
+                        'Content-Type': 'application/json'
+                    };
+                    document.getElementById('login-gate').style.display = 'none';
+                    document.getElementById('admin-panel').style.display = 'block';
+                    loadAdmin();
+                } else {
+                    errEl.style.display = 'block';
+                    errEl.textContent = 'Invalid credentials.';
+                }
+            } catch {
+                errEl.style.display = 'block';
+                errEl.textContent = 'Network error.';
+            }
+        }
+
+        /* ---- Load Data ---- */
         async function loadAdmin() {
             try {
                 const res = await fetch('/api/admin/issues', { headers: AUTH });
@@ -44,37 +107,75 @@
                 allData = await res.json();
                 refreshUI();
             } catch {
-                document.body.innerHTML = "<h1>Access Denied</h1>";
+                document.getElementById('admin-panel').innerHTML = '<div class="container"><h2 style="margin-top:40px;">Access Denied</h2></div>';
             }
         }
 
+        /* ---- Render ---- */
         function refreshUI() {
-            const pending = allData.filter(i => i.status === 'open');
-            const live = allData.filter(i => i.status === 'resolved');
+            const pending  = allData.filter(i => i.status === 'pending');
+            const open     = allData.filter(i => i.status === 'open');
+            const resolved = allData.filter(i => i.status === 'resolved');
 
-            document.getElementById('count-pi').textContent = pending.length;
-            document.getElementById('count-li').textContent = live.length;
+            document.getElementById('count-pending').textContent  = pending.length;
+            document.getElementById('count-open').textContent     = open.length;
+            document.getElementById('count-resolved').textContent = resolved.length;
 
             const list = document.getElementById('admin-list');
             const displayItems = allData.filter(i => i.status === currentStatus);
 
-            list.innerHTML = displayItems.map(item => `
-                <div class="admin-card">
-                    <div class="admin-body">
-                        <span class="tag">${item.category}</span>
-                        <h3>${item.title}</h3>
-                        <p>${item.description}</p>
-                    </div>
-                    <div class="admin-actions">
-                        ${item.status === 'open' ? 
-                            `<button class="btn approve" onclick="updateStatus(${item.id}, 'resolved')">Approve & Publish</button>` : ''
-                        }
+            if (displayItems.length === 0) {
+                list.innerHTML = '<div class="empty">No issues in this category.</div>';
+                return;
+            }
+
+            list.innerHTML = displayItems.map(item => {
+                const date = new Date(item.created_at).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                });
+
+                // Build action buttons based on current status
+                let actions = '';
+
+                if (item.status === 'pending') {
+                    actions = `
+                        <button class="btn approve" onclick="updateStatus(${item.id}, 'open')">Approve &amp; Publish</button>
+                        <button class="btn delete" onclick="remove(${item.id})">Reject &amp; Delete</button>
+                    `;
+                } else if (item.status === 'open') {
+                    actions = `
+                        <button class="btn approve" onclick="updateStatus(${item.id}, 'resolved')">Mark Resolved</button>
+                        <button class="btn delete" onclick="updateStatus(${item.id}, 'pending')">Unpublish</button>
+                    `;
+                } else if (item.status === 'resolved') {
+                    actions = `
+                        <button class="btn approve" onclick="updateStatus(${item.id}, 'open')">Reopen</button>
                         <button class="btn delete" onclick="remove(${item.id})">Delete</button>
+                    `;
+                }
+
+                return `
+                    <div class="admin-card">
+                        <div class="admin-body">
+                            <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;">
+                                <span class="tag">${item.category}</span>
+                                <span style="font-size:0.7rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">${date}</span>
+                            </div>
+                            <h3>${item.title}</h3>
+                            <p>${item.description}</p>
+                            <div style="margin-top:8px;font-size:0.72rem;color:#b0b0b0;">
+                                ▲ ${item.upvotes || 0} &nbsp; ▼ ${item.downvotes || 0} &nbsp; 💬 ${item.comment_count || 0}
+                            </div>
+                        </div>
+                        <div class="admin-actions">
+                            ${actions}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
+        /* ---- Actions ---- */
         async function updateStatus(id, status) {
             await fetch(`/api/admin/issues/${id}/status`, {
                 method: 'PATCH',
@@ -85,20 +186,20 @@
         }
 
         async function remove(id) {
-            if (confirm("Delete this issue forever?")) {
+            if (confirm('Delete this issue permanently?')) {
                 await fetch(`/api/admin/issues/${id}`, { method: 'DELETE', headers: AUTH });
                 loadAdmin();
             }
         }
 
+        /* ---- Tab Switching ---- */
         function switchTab(status) {
             currentStatus = status;
-            document.getElementById('tab-p').classList.toggle('active', status === 'open');
-            document.getElementById('tab-l').classList.toggle('active', status === 'resolved');
+            document.querySelectorAll('.admin-tabs .tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${status}`).classList.add('active');
             refreshUI();
         }
-
-        window.onload = loadAdmin;
     </script>
+
 </body>
 </html>

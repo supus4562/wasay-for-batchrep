@@ -20,7 +20,7 @@ async function initDB() {
         description TEXT NOT NULL,
         upvotes INTEGER DEFAULT 0,
         downvotes INTEGER DEFAULT 0,
-        status TEXT DEFAULT 'open',
+        status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -95,7 +95,7 @@ app.get('/api/issues', async (req, res) => {
     SELECT i.*, 
       (SELECT COUNT(*) FROM comments c WHERE c.issue_id = i.id AND c.hidden = 0) as comment_count
     FROM issues i
-    WHERE 1=1
+    WHERE i.status != 'pending'
   `;
   const params = [];
   let paramIndex = 1;
@@ -127,8 +127,8 @@ app.post('/api/issues', async (req, res) => {
   if (!title || !category || !description) return res.status(400).json({ error: 'Missing fields' });
   
   const { rows } = await pool.query(
-    'INSERT INTO issues (title, category, description) VALUES ($1, $2, $3) RETURNING id', 
-    [title, category, description]
+    'INSERT INTO issues (title, category, description, status) VALUES ($1, $2, $3, $4) RETURNING id', 
+    [title, category, description, 'pending']
   );
   res.json({ id: rows[0].id, message: 'Issue submitted!' });
 });
