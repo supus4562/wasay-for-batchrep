@@ -145,50 +145,53 @@ app.post('/api/issues/:id/vote', async (req, res) => {
   if (!['up', 'down', 'unvote'].includes(type)) return res.status(400).json({ error: 'Invalid vote' });
   if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
 
-  // Check if this device already voted on this issue
-  const existing = await pool.query(
-    'SELECT vote_type FROM voter_fingerprints WHERE fingerprint = $1 AND issue_id = $2',
-    [fingerprint, req.params.id]
-  );
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const existing = await client.query(
+      'SELECT vote_type FROM voter_fingerprints WHERE fingerprint = $1 AND issue_id = $2 FOR UPDATE',
+      [fingerprint, req.params.id]
+    );
 
-  if (type === 'unvote') {
-    if (existing.rows.length > 0) {
+    if (type === 'unvote') {
+      if (existing.rows.length > 0) {
+        const oldType = existing.rows[0].vote_type;
+        const col = oldType === 'up' ? 'upvotes' : 'downvotes';
+        await client.query(`UPDATE issues SET ${col} = GREATEST(${col} - 1, 0) WHERE id = $1`, [req.params.id]);
+        await client.query('DELETE FROM voter_fingerprints WHERE fingerprint = $1 AND issue_id = $2', [fingerprint, req.params.id]);
+      }
+    } else if (existing.rows.length > 0) {
       const oldType = existing.rows[0].vote_type;
-      const col = oldType === 'up' ? 'upvotes' : 'downvotes';
-      await pool.query(`UPDATE issues SET ${col} = GREATEST(${col} - 1, 0) WHERE id = $1`, [req.params.id]);
-      await pool.query('DELETE FROM voter_fingerprints WHERE fingerprint = $1 AND issue_id = $2', [fingerprint, req.params.id]);
+      if (oldType !== type) {
+        // Switching vote
+        const oldCol = oldType === 'up' ? 'upvotes' : 'downvotes';
+        const newCol = type === 'up' ? 'upvotes' : 'downvotes';
+        await client.query(`UPDATE issues SET ${oldCol} = GREATEST(${oldCol} - 1, 0), ${newCol} = ${newCol} + 1 WHERE id = $1`, [req.params.id]);
+        await client.query(
+          'UPDATE voter_fingerprints SET vote_type = $1 WHERE fingerprint = $2 AND issue_id = $3',
+          [type, fingerprint, req.params.id]
+        );
+      }
+    } else {
+      // Fresh vote
+      await client.query(
+        'INSERT INTO voter_fingerprints (fingerprint, issue_id, vote_type) VALUES ($1, $2, $3)',
+        [fingerprint, req.params.id, type]
+      );
+      const col = type === 'up' ? 'upvotes' : 'downvotes';
+      await client.query(`UPDATE issues SET ${col} = ${col} + 1 WHERE id = $1`, [req.params.id]);
     }
-    const { rows } = await pool.query('SELECT upvotes, downvotes FROM issues WHERE id = $1', [req.params.id]);
-    return res.json(rows[0]);
-  }
-
-  if (existing.rows.length > 0) {
-    const oldType = existing.rows[0].vote_type;
-    if (oldType === type) {
-      // Same vote again, just return current counts
-      const { rows } = await pool.query('SELECT upvotes, downvotes FROM issues WHERE id = $1', [req.params.id]);
-      return res.json(rows[0]);
-    }
-    // Switching vote: decrement old, increment new
-    const oldCol = oldType === 'up' ? 'upvotes' : 'downvotes';
-    const newCol = type === 'up' ? 'upvotes' : 'downvotes';
-    await pool.query(`UPDATE issues SET ${oldCol} = GREATEST(${oldCol} - 1, 0), ${newCol} = ${newCol} + 1 WHERE id = $1`, [req.params.id]);
-    await pool.query(
-      'UPDATE voter_fingerprints SET vote_type = $1 WHERE fingerprint = $2 AND issue_id = $3',
-      [type, fingerprint, req.params.id]
-    );
-  } else {
-    // Fresh vote
-    const col = type === 'up' ? 'upvotes' : 'downvotes';
-    await pool.query(`UPDATE issues SET ${col} = ${col} + 1 WHERE id = $1`, [req.params.id]);
-    await pool.query(
-      'INSERT INTO voter_fingerprints (fingerprint, issue_id, vote_type) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
-      [fingerprint, req.params.id, type]
-    );
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Vote transaction error:', err);
+    return res.status(500).json({ error: 'Failed to process vote' });
+  } finally {
+    client.release();
   }
 
   const { rows } = await pool.query('SELECT upvotes, downvotes FROM issues WHERE id = $1', [req.params.id]);
-  res.json(rows[0]);
+  res.json(rows[0] || { upvotes: 0, downvotes: 0 });
 });
 
 app.get('/api/issues/:id/comments', async (req, res) => {

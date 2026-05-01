@@ -256,13 +256,21 @@
         }
 
         /* ---- Voting (optimistic, instant UI, switchable & un-votable) ---- */
+        const votingInProgress = new Set();
+        
         async function vote(id, type) {
+            if (votingInProgress.has(id)) return;
+            votingInProgress.add(id);
+
             const scoreEl = document.getElementById(`score-${id}`);
             const vc = document.getElementById(`vc-${id}`);
             const upBtn = vc.querySelector('.v-btn.up');
             const downBtn = vc.querySelector('.v-btn.down');
             const issue = allIssues.find(i => i.id === id);
-            if (!issue) return;
+            if (!issue) {
+                votingInProgress.delete(id);
+                return;
+            }
 
             const oldUp = issue.upvotes || 0;
             const oldDown = issue.downvotes || 0;
@@ -347,6 +355,8 @@
                 }
                 localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
                 console.error('Vote failed:', e);
+            } finally {
+                votingInProgress.delete(id);
             }
         }
 
