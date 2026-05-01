@@ -195,18 +195,6 @@
                                 </div>
                             </div>
                         </details>
-
-                        <!-- RESPOND SECTION -->
-                        <details class="edit-toggle" style="margin-top:10px;">
-                            <summary class="edit-summary">Post Solution</summary>
-                            <div style="margin-top:12px;">
-                                <div id="comments-${item.id}" style="margin-bottom:12px;"></div>
-                                <div class="form-group">
-                                    <label>Your Response</label>
-                                    <textarea id="resp-${item.id}" rows="3" placeholder="Write a public response…"></textarea>
-                                </div>
-                                <button class="btn approve" onclick="respond(${item.id})">Post Response</button>
-                                <button class="btn delete" style="margin-left:6px;" onclick="loadComments(${item.id})">Load Comments</button>
                             </div>
                         </details>
                     </div>
@@ -233,38 +221,6 @@
             await fetch(`/api/admin/issues/${id}/votes`,{method:'PATCH',headers:AUTH,body:JSON.stringify({upvotes,downvotes})});
             loadAll();
         }
-
-        async function respond(id){
-            const body=document.getElementById(`resp-${id}`).value.trim();
-            if(!body) return alert('Write a response first');
-            await fetch(`/api/issues/${id}/comments`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({author:RESPONDER,body})});
-            document.getElementById(`resp-${id}`).value='';
-            loadComments(id);
-        }
-
-        async function loadComments(id){
-            const r = await fetch(`/api/admin/issues/${id}/comments`,{headers:AUTH});
-            const comments = await r.json();
-            const el = document.getElementById(`comments-${id}`);
-            if(!comments.length){ el.innerHTML='<p style="font-size:0.75rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">No comments yet.</p>'; return; }
-            el.innerHTML = comments.map(c => {
-                const isOfficial = c.author===RESPONDER;
-                const hidden = c.hidden ? ' (HIDDEN)' : '';
-                return `<div style="padding:10px;border:1px solid ${isOfficial?'#e2001a':'#e8e8e8'};margin-bottom:6px;background:${isOfficial?'#fff0f0':'#f5f5f5'};">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:${isOfficial?'#e2001a':'#3a3a3a'};">${c.author}${hidden}</strong>
-                        <div style="display:flex;gap:4px;">
-                            <button onclick="toggleVis(${c.id},${c.hidden?0:1},${id})" style="font-size:0.65rem;padding:3px 8px;border:1px solid #b0b0b0;background:none;cursor:pointer;">${c.hidden?'Show':'Hide'}</button>
-                            <button onclick="delComment(${c.id},${id})" style="font-size:0.65rem;padding:3px 8px;border:1px solid #e2001a;color:#e2001a;background:none;cursor:pointer;">Del</button>
-                        </div>
-                    </div>
-                    <p style="font-size:0.8rem;margin-top:4px;color:#3a3a3a;line-height:1.5;">${c.body}</p>
-                </div>`;
-            }).join('');
-        }
-
-        async function toggleVis(cid,hide,iid){ await fetch(`/api/admin/comments/${cid}/visibility`,{method:'PATCH',headers:AUTH,body:JSON.stringify({hidden:hide})}); loadComments(iid); }
-        async function delComment(cid,iid){ if(confirm('Delete comment?')){ await fetch(`/api/admin/comments/${cid}`,{method:'DELETE',headers:AUTH}); loadComments(iid); }}
 
         function switchTab(s){
             currentStatus=s;
