@@ -61,6 +61,13 @@ async function initDB() {
     } catch (err) {
       // column likely already exists, ignore
     }
+
+    // Add proposed_solution column if it doesn't exist
+    try {
+      await pool.query("ALTER TABLE issues ADD COLUMN proposed_solution TEXT");
+    } catch (err) {
+      // column likely already exists, ignore
+    }
   
     console.log('Database initialized successfully.');
   } catch (err) {
@@ -130,12 +137,12 @@ app.get('/api/issues/:id', async (req, res) => {
 });
 
 app.post('/api/issues', async (req, res) => {
-  const { title, category, description } = req.body;
+  const { title, category, description, proposedSolution } = req.body;
   if (!title || !category || !description) return res.status(400).json({ error: 'Missing fields' });
   
   const { rows } = await pool.query(
-    'INSERT INTO issues (title, category, description, status) VALUES ($1, $2, $3, $4) RETURNING id', 
-    [title, category, description, 'pending']
+    'INSERT INTO issues (title, category, description, proposed_solution, status) VALUES ($1, $2, $3, $4, $5) RETURNING id', 
+    [title, category, description, proposedSolution || null, 'pending']
   );
   res.json({ id: rows[0].id, message: 'Issue submitted!' });
 });

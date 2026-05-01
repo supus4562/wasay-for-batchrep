@@ -94,6 +94,10 @@
                     <label for="issue-desc">Description</label>
                     <textarea id="issue-desc" name="description" placeholder="Give details. The more specific, the better the response." required></textarea>
                 </div>
+                <div class="form-group">
+                    <label for="issue-proposed-solution">Proposed Solution <span style="color:#888; font-weight:normal; font-size:0.75rem;">(Optional)</span></label>
+                    <textarea id="issue-proposed-solution" name="proposedSolution" placeholder="How would you fix this? (This helps us understand your perspective better)"></textarea>
+                </div>
                 <button type="submit" class="btn-primary" id="submit-btn">Submit Issue</button>
                 <div class="form-msg" id="form-msg"></div>
             </form>
@@ -381,6 +385,7 @@
             const title = document.getElementById('issue-title').value.trim();
             const category = document.getElementById('issue-category').value;
             const description = document.getElementById('issue-desc').value.trim();
+            const proposedSolution = document.getElementById('issue-proposed-solution').value.trim();
             const msgEl = document.getElementById('form-msg');
             const btn = document.getElementById('submit-btn');
 
@@ -397,7 +402,7 @@
                 const res = await fetch('/api/issues', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, category, description })
+                    body: JSON.stringify({ title, category, description, proposedSolution })
                 });
                 if (res.ok) {
                     msgEl.className = 'form-msg success';
