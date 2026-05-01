@@ -34,6 +34,9 @@
                     Every issue posted here gets a direct, public response.
                     <strong>Transparency isn't optional, it's the default.</strong>
                 </p>
+                <button class="banner-cta" id="banner-submit-btn" onclick="openModal()">
+                    ＋ Submit an Issue
+                </button>
             </div>
             <div class="campaign-stats">
                 <div class="stat-block">
@@ -119,7 +122,11 @@
         <a href="/admin" style="color:#b0b0b0;font-size:0.65rem;letter-spacing:1px;text-decoration:none;margin-top:6px;display:inline-block;">ADMIN PANEL</a>
     </footer>
 
-
+    <!-- ======================== FLOATING SUBMIT (appears on scroll) ======================== -->
+    <button class="fab-submit" id="fab-submit" onclick="openModal()" aria-label="Submit an issue">
+        <span class="fab-plus">＋</span>
+        <span class="fab-text">Submit an Issue</span>
+    </button>
 
     <!-- ======================== SCRIPT ======================== -->
     <script>
@@ -468,10 +475,31 @@
             }
         });
 
+        /* ---- FAB scroll behavior ----
+           Show the floating Submit button as soon as the banner Submit
+           button leaves the viewport. */
+        function setupFAB() {
+            const bannerBtn = document.getElementById('banner-submit-btn');
+            const fab = document.getElementById('fab-submit');
+            if (!bannerBtn || !fab || !('IntersectionObserver' in window)) {
+                if (fab) fab.classList.add('visible');
+                return;
+            }
+            const observer = new IntersectionObserver(([entry]) => {
+                if (entry.isIntersecting) {
+                    fab.classList.remove('visible');
+                } else {
+                    fab.classList.add('visible');
+                }
+            }, { threshold: 0.1 });
+            observer.observe(bannerBtn);
+        }
+
         /* ---- Boot ---- */
         window.onload = async () => {
             await init();
             startPolling();
+            setupFAB();
         };
     </script>
 
