@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Open Forum</title>
-    <meta name="description" content="Voice your issues directly. The Open Forum is your space to be heard, with a real plan of action behind every response.">
+    <title>Aapki Zabaan</title>
+    <meta name="description" content="Aapki Zabaan, your voice, unfiltered. Raise any issue you face and get a direct, public response.">
     <link rel="stylesheet" href="style.css">
     <script>
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -16,7 +16,7 @@
     <!-- ======================== HEADER ======================== -->
     <header class="main-header">
         <div class="header-content">
-            <h1>The Open Forum</h1>
+            <h1>Aapki Zabaan</h1>
             <p class="subtitle">
                 Your voice, unfiltered. Post any issue you face, from academics
                 to campus life, and get a direct response with a real plan
@@ -29,12 +29,14 @@
     <section class="campaign-banner">
         <div class="campaign-inner">
             <div class="campaign-text">
-                <h2>Built for Accountability</h2>
+                <h2>Submit Your Issue</h2>
                 <p>
-                    This isn't a campaign promise, it's already happening.
-                    Every issue you post here gets a direct, public response.
+                    Every issue posted here gets a direct, public response.
                     <strong>Transparency isn't optional, it's the default.</strong>
                 </p>
+                <button class="banner-cta" id="banner-submit-btn" onclick="openModal()">
+                    ＋ Submit an Issue
+                </button>
             </div>
             <div class="campaign-stats">
                 <div class="stat-block">
@@ -54,12 +56,6 @@
 
         <!-- ---- Sidebar ---- -->
         <aside class="sidebar">
-            <div class="sidebar-cta">
-                <button class="btn-submit-issue" id="open-modal-btn" onclick="openModal()">
-                    ＋ Submit an Issue
-                </button>
-            </div>
-
             <div class="sidebar-box">
                 <h3>Categories</h3>
                 <nav class="cat-nav" id="category-list">
@@ -120,11 +116,17 @@
 
     <!-- ======================== FOOTER ======================== -->
     <footer class="main-footer">
-        <strong>The Open Forum</strong>. Built for the batch.
+        <strong>Aapki Zabaan</strong>. Built for the batch.
         Accountability starts here.
         <br>
         <a href="/admin" style="color:#b0b0b0;font-size:0.65rem;letter-spacing:1px;text-decoration:none;margin-top:6px;display:inline-block;">ADMIN PANEL</a>
     </footer>
+
+    <!-- ======================== FLOATING SUBMIT (appears on scroll) ======================== -->
+    <button class="fab-submit" id="fab-submit" onclick="openModal()" aria-label="Submit an issue">
+        <span class="fab-plus">＋</span>
+        <span class="fab-text">Submit an Issue</span>
+    </button>
 
     <!-- ======================== SCRIPT ======================== -->
     <script>
@@ -417,10 +419,33 @@
             }
         });
 
+        /* ---- FAB scroll behavior ----
+           Show the floating Submit button as soon as the banner Submit
+           button leaves the viewport. Hide it when the banner button is
+           visible again. */
+        function setupFAB() {
+            const bannerBtn = document.getElementById('banner-submit-btn');
+            const fab = document.getElementById('fab-submit');
+            if (!bannerBtn || !fab || !('IntersectionObserver' in window)) {
+                // Fallback for very old browsers: just show FAB always
+                if (fab) fab.classList.add('visible');
+                return;
+            }
+            const observer = new IntersectionObserver(([entry]) => {
+                if (entry.isIntersecting) {
+                    fab.classList.remove('visible');
+                } else {
+                    fab.classList.add('visible');
+                }
+            }, { threshold: 0.1 });
+            observer.observe(bannerBtn);
+        }
+
         /* ---- Boot ---- */
         window.onload = async () => {
             await init();
             startPolling();
+            setupFAB();
         };
     </script>
 

@@ -1,7 +1,7 @@
 {
-  "name": "the-open-forum",
+  "name": "aapki-zabaan",
   "version": "1.0.0",
-  "description": "Community issue tracker for SSE batch representative accountability.",
+  "description": "Aapki Zabaan, community issue tracker for SSE batch representative accountability.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
