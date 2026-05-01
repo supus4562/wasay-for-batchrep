@@ -75,8 +75,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- Admin Auth ---
-const ADMIN_USER = 'supieeewupieee';
-const ADMIN_PASS = '1.e4c5!2.Nf6d5';
+const ADMIN_USER = 'Adminwmj';
+const ADMIN_PASS = '6767!?@sse29';
 
 function requireAdmin(req, res, next) {
   const { username, password } = req.headers;
