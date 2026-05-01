@@ -262,7 +262,7 @@ app.delete('/api/admin/comments/:id', requireAdmin, async (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`\n🗳️  Wasay For Batch Rep running on port ${PORT}\n`));
+app.listen(PORT, () => console.log(`\n🗳️  The Open Forum running on port ${PORT}\n`));
 
 // =================== FRONTEND ROUTING (VERCEL FIX) ===================
 

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Open Forum — Wasay for Batch Representative</title>
-    <meta name="description" content="Voice your issues directly. Wasay listens, responds, and acts. The Open Forum is your space to be heard.">
+    <title>The Open Forum</title>
+    <meta name="description" content="Voice your issues directly. The Open Forum is your space to be heard, with a real plan of action behind every response.">
     <link rel="stylesheet" href="style.css">
     <script>
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -18,9 +18,9 @@
         <div class="header-content">
             <h1>The Open Forum</h1>
             <p class="subtitle">
-                Your voice, unfiltered. Post any issue you face — from academics
-                to campus life — and <strong>Wasay</strong> will personally respond
-                with a real plan of action.
+                Your voice, unfiltered. Post any issue you face, from academics
+                to campus life, and get a direct response with a real plan
+                of action.
             </p>
         </div>
     </header>
@@ -29,22 +29,20 @@
     <section class="campaign-banner">
         <div class="campaign-inner">
             <div class="campaign-text">
-                <h2>Wasay for Batch Representative</h2>
+                <h2>Built for Accountability</h2>
                 <p>
-                    This isn't a campaign promise — it's already happening. While
-                    others talk, Wasay built this platform so you can hold your
-                    representative accountable from day one. Every issue you
-                    post here gets a direct, public response. <strong>Transparency
-                    isn't optional — it's the default.</strong>
+                    This isn't a campaign promise, it's already happening.
+                    Every issue you post here gets a direct, public response.
+                    <strong>Transparency isn't optional, it's the default.</strong>
                 </p>
             </div>
             <div class="campaign-stats">
                 <div class="stat-block">
-                    <span class="stat-num" id="stat-issues">—</span>
+                    <span class="stat-num" id="stat-issues">0</span>
                     <span class="stat-label">Issues Raised</span>
                 </div>
                 <div class="stat-block">
-                    <span class="stat-num" id="stat-resolved">—</span>
+                    <span class="stat-num" id="stat-resolved">0</span>
                     <span class="stat-label">Addressed</span>
                 </div>
             </div>
@@ -56,6 +54,12 @@
 
         <!-- ---- Sidebar ---- -->
         <aside class="sidebar">
+            <div class="sidebar-cta">
+                <button class="btn-submit-issue" id="open-modal-btn" onclick="openModal()">
+                    ＋ Submit an Issue
+                </button>
+            </div>
+
             <div class="sidebar-box">
                 <h3>Categories</h3>
                 <nav class="cat-nav" id="category-list">
@@ -64,26 +68,11 @@
             </div>
 
             <div class="sidebar-box">
-                <h3>Filter by Status</h3>
-                <nav class="cat-nav" id="status-filters">
-                    <button class="cat-item active" data-status="all" onclick="filterStatus('all')">All Issues</button>
-                    <button class="cat-item" data-status="open" onclick="filterStatus('open')">Awaiting Response</button>
-                    <button class="cat-item" data-status="resolved" onclick="filterStatus('resolved')">Addressed</button>
-                </nav>
-            </div>
-
-            <div class="sidebar-cta">
-                <button class="btn-submit-issue" id="open-modal-btn" onclick="openModal()">
-                    ＋ Submit an Issue
-                </button>
-            </div>
-
-            <div class="sidebar-box" style="margin-top:24px;">
-                <h3>Why Wasay?</h3>
+                <h3>Why This Forum?</h3>
                 <p style="font-size:0.78rem;color:#3a3a3a;line-height:1.6;">
-                    Most candidates make promises. Wasay built a platform.
-                    This forum is live, public, and permanent — no
-                    issue goes unseen. That's the kind of
+                    Most platforms collect feedback that goes nowhere. This forum
+                    is live, public, and permanent. No issue goes unseen, and
+                    every response stays on the record. That's the kind of
                     representation SSE deserves.
                 </p>
             </div>
@@ -121,7 +110,7 @@
                 </div>
                 <div class="form-group">
                     <label for="issue-desc">Description</label>
-                    <textarea id="issue-desc" name="description" placeholder="Give details — the more specific, the better the response" required></textarea>
+                    <textarea id="issue-desc" name="description" placeholder="Give details. The more specific, the better the response." required></textarea>
                 </div>
                 <button type="submit" class="btn-primary" id="submit-btn">Submit Issue</button>
                 <div class="form-msg" id="form-msg"></div>
@@ -131,7 +120,7 @@
 
     <!-- ======================== FOOTER ======================== -->
     <footer class="main-footer">
-        <strong>The Open Forum</strong> &mdash; Built by <strong>Wasay</strong> for the batch.
+        <strong>The Open Forum</strong>. Built for the batch.
         Accountability starts here.
         <br>
         <a href="/admin" style="color:#b0b0b0;font-size:0.65rem;letter-spacing:1px;text-decoration:none;margin-top:6px;display:inline-block;">ADMIN PANEL</a>
@@ -140,10 +129,11 @@
     <!-- ======================== SCRIPT ======================== -->
     <script>
         const votedIssues = new Set(JSON.parse(localStorage.getItem('votedIssues') || '[]'));
+        const OFFICIAL_RESPONDER = 'Batch Representative';
         let allIssues = [];
         let allCategories = [];
         let activeCategory = 'all';
-        let activeStatus = 'all';
+        let pollIntervalId = null;
 
         function getFingerprint() {
             let fp = localStorage.getItem('deviceFingerprint');
@@ -204,9 +194,7 @@
         /* ---- Filtering ---- */
         function getFilteredIssues() {
             return allIssues.filter(i => {
-                const catMatch = activeCategory === 'all' || i.category === activeCategory;
-                const statusMatch = activeStatus === 'all' || i.status === activeStatus;
-                return catMatch && statusMatch;
+                return activeCategory === 'all' || i.category === activeCategory;
             });
         }
 
@@ -217,22 +205,13 @@
             updateStats();
         }
 
-        function filterStatus(status) {
-            activeStatus = status;
-            document.querySelectorAll('#status-filters .cat-item').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.status === status);
-            });
-            renderFeed();
-            updateStats();
-        }
-
         /* ---- Render Feed ---- */
         function renderFeed() {
             const list = document.getElementById('q-li');
             const issues = getFilteredIssues();
 
             if (issues.length === 0) {
-                list.innerHTML = `<div class="empty">No issues found. Be the first — submit one above.</div>`;
+                list.innerHTML = `<div class="empty">No issues found. Be the first to submit one.</div>`;
                 return;
             }
 
@@ -280,7 +259,7 @@
                 const comments = await res.json();
                 if (!comments.length) { el.innerHTML = '<p style="font-size:0.75rem;color:#b0b0b0;">No visible responses.</p>'; return; }
                 el.innerHTML = comments.map(c => {
-                    const isOfficial = c.author === 'Wasay M. Jehangiri';
+                    const isOfficial = c.author === OFFICIAL_RESPONDER;
                     const d = new Date(c.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
                     return `<div class="response-item ${isOfficial ? 'official' : ''}">
                         <span class="response-author">${c.author}</span><span class="response-date">${d}</span>
@@ -376,8 +355,73 @@
             }
         }
 
+        /* ---- Real-time polling for upvotes ---- */
+        async function pollVotes() {
+            try {
+                const res = await fetch('/api/issues');
+                if (!res.ok) return;
+                const fresh = await res.json();
+
+                // Update score in place for any issue whose votes changed
+                let needsRerender = false;
+                fresh.forEach(newIssue => {
+                    const oldIssue = allIssues.find(i => i.id === newIssue.id);
+                    if (oldIssue) {
+                        if (oldIssue.upvotes !== newIssue.upvotes || oldIssue.downvotes !== newIssue.downvotes) {
+                            oldIssue.upvotes = newIssue.upvotes;
+                            oldIssue.downvotes = newIssue.downvotes;
+                            const scoreEl = document.getElementById(`score-${newIssue.id}`);
+                            if (scoreEl) {
+                                const newScore = (newIssue.upvotes || 0) - (newIssue.downvotes || 0);
+                                if (scoreEl.textContent !== String(newScore)) {
+                                    scoreEl.textContent = newScore;
+                                    scoreEl.classList.remove('score-pulse');
+                                    void scoreEl.offsetWidth; // force reflow to restart animation
+                                    scoreEl.classList.add('score-pulse');
+                                }
+                            }
+                        }
+                        if (oldIssue.comment_count !== newIssue.comment_count || oldIssue.status !== newIssue.status) {
+                            needsRerender = true;
+                        }
+                    }
+                });
+
+                // Detect new issues or removed issues, do a soft re-render if so
+                const knownIds = new Set(allIssues.map(i => i.id));
+                const freshIds = new Set(fresh.map(i => i.id));
+                const hasNew = fresh.some(i => !knownIds.has(i.id));
+                const hasRemoved = allIssues.some(i => !freshIds.has(i.id));
+                if (hasNew || hasRemoved || needsRerender) {
+                    allIssues = fresh;
+                    renderFeed();
+                    updateStats();
+                }
+            } catch (e) {
+                // silent: keep polling
+            }
+        }
+
+        function startPolling() {
+            if (pollIntervalId) clearInterval(pollIntervalId);
+            pollIntervalId = setInterval(pollVotes, 5000);
+        }
+
+        // Pause polling when tab is hidden, resume when visible (saves resources)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
+            } else {
+                pollVotes();
+                startPolling();
+            }
+        });
+
         /* ---- Boot ---- */
-        window.onload = init;
+        window.onload = async () => {
+            await init();
+            startPolling();
+        };
     </script>
 
 </body>

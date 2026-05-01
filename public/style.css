@@ -1,5 +1,5 @@
 /* ===================================================================
-   THE OPEN FORUM — Swiss / International Typographic Style
+   THE OPEN FORUM, Swiss / International Typographic Style
    Strict grid · Helvetica Neue · High contrast · Red accent
    =================================================================== */
 
@@ -86,7 +86,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================================================================
-   HEADER — bold Swiss banner
+   HEADER, bold Swiss banner
    =================================================================== */
 .main-header {
   background: var(--black);
@@ -140,7 +140,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================================================================
-   CAMPAIGN BANNER — Wasay for BR promotion strip
+   CAMPAIGN BANNER, accountability strip
    =================================================================== */
 .campaign-banner {
   background: var(--red);
@@ -206,7 +206,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================================================================
-   MAIN LAYOUT — Swiss grid
+   MAIN LAYOUT, Swiss grid
    =================================================================== */
 .main-layout {
   max-width: var(--max-w);
@@ -269,9 +269,9 @@ img { max-width: 100%; display: block; }
   font-weight: 700;
 }
 
-/* Submit Issue CTA in sidebar */
+/* Submit Issue CTA in sidebar (now positioned at top) */
 .sidebar-cta {
-  margin-top: var(--sp-3);
+  margin-bottom: var(--sp-3);
 }
 
 .btn-submit-issue {
@@ -325,7 +325,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================================================================
-   ISSUE CARD — clean Swiss card
+   ISSUE CARD, clean Swiss card
    =================================================================== */
 .issue-list {
   display: flex;
@@ -995,5 +995,43 @@ details[open] > .edit-summary::before { content: '▾ '; }
 
   .campaign-text h2 {
     font-size: var(--fs-md);
+  }
+}
+
+/* ===================================================================
+   REAL-TIME VOTE PULSE
+   =================================================================== */
+.score-pulse {
+  animation: score-pulse 0.6s ease;
+}
+
+@keyframes score-pulse {
+  0%   { color: var(--red); transform: scale(1.35); }
+  60%  { color: var(--red); transform: scale(1.05); }
+  100% { color: var(--black); transform: scale(1); }
+}
+
+/* ===================================================================
+   STICKY SUBMIT-ISSUE BUTTON
+   On desktop the entire sidebar is sticky, so the button at the top
+   of it is always visible while scrolling the issues feed.
+   On mobile the sidebar is static, so the CTA itself stays pinned
+   to the top of the viewport like a header bar.
+   =================================================================== */
+@media (max-width: 768px) {
+  .sidebar-cta {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--white);
+    margin: 0 calc(-1 * var(--sp-3));
+    padding: var(--sp-1) var(--sp-3);
+    border-bottom: 2px solid var(--black);
+    margin-bottom: var(--sp-2);
+  }
+
+  /* Make sure the button itself stays visually flush */
+  .sidebar-cta .btn-submit-issue {
+    margin: 0;
   }
 }

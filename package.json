@@ -1,7 +1,7 @@
 {
-  "name": "wasay-for-batch-rep",
+  "name": "the-open-forum",
   "version": "1.0.0",
-  "description": "Community issue tracker for SSE batch rep election campaign",
+  "description": "Community issue tracker for SSE batch representative accountability.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
