@@ -393,29 +393,33 @@ img { max-width: 100%; display: block; }
 .vote-controls {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .v-btn {
   background: var(--off-white);
   border: 1.5px solid var(--light-gray);
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--dark-gray);
-  transition: all 0.12s ease;
+  color: var(--mid-gray);
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: var(--font);
+  position: relative;
+}
+
+.v-btn svg {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .v-btn:hover:not(:disabled) {
   border-color: var(--black);
   background: var(--black);
   color: var(--white);
+  transform: scale(1.15);
 }
 
 .v-btn.up:hover:not(:disabled) {
@@ -424,17 +428,54 @@ img { max-width: 100%; display: block; }
   color: var(--white);
 }
 
-.v-btn:disabled {
-  opacity: 0.35;
+.v-btn.up:hover:not(:disabled) svg {
+  transform: translateY(-2px);
+}
+
+.v-btn.down:hover:not(:disabled) svg {
+  transform: translateY(2px);
+}
+
+.v-btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+/* Voted states */
+.v-btn.up.voted {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--white);
+  opacity: 1;
+}
+
+.v-btn.down.voted {
+  background: var(--dark-gray);
+  border-color: var(--dark-gray);
+  color: var(--white);
+  opacity: 1;
+}
+
+.v-btn:disabled:not(.voted) {
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
 .v-score {
-  font-size: var(--fs-sm);
-  font-weight: 800;
-  min-width: 28px;
+  font-size: var(--fs-base);
+  font-weight: 900;
+  min-width: 32px;
   text-align: center;
   color: var(--black);
+  transition: color 0.2s, transform 0.2s;
+  display: inline-block;
+}
+
+.v-score.positive {
+  color: var(--red);
+}
+
+.v-score.negative {
+  color: var(--mid-gray);
 }
 
 .comment-count {
@@ -1002,117 +1043,23 @@ details[open] > .edit-summary::before { content: '▾ '; }
    REAL-TIME VOTE PULSE
    =================================================================== */
 .score-pulse {
-  animation: score-pulse 0.6s ease;
+  animation: score-pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes score-pulse {
-  0%   { color: var(--red); transform: scale(1.35); }
-  60%  { color: var(--red); transform: scale(1.05); }
-  100% { color: var(--black); transform: scale(1); }
+  0%   { transform: scale(1.5); color: var(--red); }
+  50%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
 }
 
-/* ===================================================================
-   BANNER CTA, big white button inside the red banner
-   =================================================================== */
-.banner-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: var(--sp-2);
-  padding: 14px 28px;
-  background: var(--white);
-  color: var(--black);
-  border: 2px solid var(--white);
-  font-family: var(--font);
-  font-size: var(--fs-sm);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s;
-  box-shadow: 4px 4px 0 var(--black);
+/* Vote button click ripple */
+.v-btn.voted {
+  animation: vote-confirm 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.banner-cta:hover {
-  background: var(--black);
-  color: var(--white);
-  border-color: var(--black);
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--white);
+@keyframes vote-confirm {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
-.banner-cta:active {
-  transform: translate(0, 0);
-  box-shadow: 2px 2px 0 var(--black);
-}
-
-/* ===================================================================
-   FLOATING ACTION BUTTON, appears in bottom-right when banner CTA
-   scrolls out of view. Always reachable while reading the issue feed.
-   =================================================================== */
-.fab-submit {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 90;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 22px;
-  background: var(--red);
-  color: var(--white);
-  border: none;
-  font-family: var(--font);
-  font-size: var(--fs-sm);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(226, 0, 26, 0.45), 4px 4px 0 var(--black);
-
-  opacity: 0;
-  transform: translateY(20px) scale(0.92);
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, background 0.15s;
-}
-
-.fab-submit.visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-.fab-submit:hover {
-  background: var(--red-dark);
-  transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 12px 28px rgba(226, 0, 26, 0.55), 6px 6px 0 var(--black);
-}
-
-.fab-submit:active {
-  transform: translateY(0) scale(0.98);
-}
-
-.fab-plus {
-  font-size: 1.2rem;
-  line-height: 1;
-  font-weight: 900;
-}
-
-/* On very small screens, collapse to a circular icon-only button */
-@media (max-width: 480px) {
-  .fab-text {
-    display: none;
-  }
-  .fab-submit {
-    bottom: 16px;
-    right: 16px;
-    width: 56px;
-    height: 56px;
-    padding: 0;
-    border-radius: 50%;
-    justify-content: center;
-  }
-  .fab-plus {
-    font-size: 1.6rem;
-  }
-}

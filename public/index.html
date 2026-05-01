@@ -29,14 +29,11 @@
     <section class="campaign-banner">
         <div class="campaign-inner">
             <div class="campaign-text">
-                <h2>Submit Your Issue</h2>
+                <h2>Your Voice Matters</h2>
                 <p>
                     Every issue posted here gets a direct, public response.
                     <strong>Transparency isn't optional, it's the default.</strong>
                 </p>
-                <button class="banner-cta" id="banner-submit-btn" onclick="openModal()">
-                    ＋ Submit an Issue
-                </button>
             </div>
             <div class="campaign-stats">
                 <div class="stat-block">
@@ -122,11 +119,7 @@
         <a href="/admin" style="color:#b0b0b0;font-size:0.65rem;letter-spacing:1px;text-decoration:none;margin-top:6px;display:inline-block;">ADMIN PANEL</a>
     </footer>
 
-    <!-- ======================== FLOATING SUBMIT (appears on scroll) ======================== -->
-    <button class="fab-submit" id="fab-submit" onclick="openModal()" aria-label="Submit an issue">
-        <span class="fab-plus">＋</span>
-        <span class="fab-text">Submit an Issue</span>
-    </button>
+
 
     <!-- ======================== SCRIPT ======================== -->
     <script>
@@ -219,7 +212,7 @@
 
             list.innerHTML = issues.map(issue => {
                 const score = (issue.upvotes || 0) - (issue.downvotes || 0);
-                const hasVoted = votedIssues.has(issue.id);
+                const voteState = votedIssues.has(issue.id + '-up') ? 'up' : votedIssues.has(issue.id + '-down') ? 'down' : null;
                 const statusClass = issue.status || 'open';
                 const statusLabel = statusClass === 'open' ? 'Awaiting Response' : 'Addressed';
                 const date = new Date(issue.created_at).toLocaleDateString('en-GB', {
@@ -237,10 +230,14 @@
                         <h3 class="card-title">${issue.title}</h3>
                         <p class="card-desc">${issue.description}</p>
                         <div class="card-footer">
-                            <div class="vote-controls">
-                                <button class="v-btn up" onclick="vote(${issue.id}, 'up')" ${hasVoted ? 'disabled' : ''}>▲</button>
-                                <span class="v-score" id="score-${issue.id}">${score}</span>
-                                <button class="v-btn down" onclick="vote(${issue.id}, 'down')" ${hasVoted ? 'disabled' : ''}>▼</button>
+                            <div class="vote-controls" id="vc-${issue.id}">
+                                <button class="v-btn up ${voteState === 'up' ? 'voted' : ''}" onclick="vote(${issue.id}, 'up')" ${voteState ? 'disabled' : ''} aria-label="Upvote">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+                                </button>
+                                <span class="v-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : ''}" id="score-${issue.id}">${score}</span>
+                                <button class="v-btn down ${voteState === 'down' ? 'voted' : ''}" onclick="vote(${issue.id}, 'down')" ${voteState ? 'disabled' : ''} aria-label="Downvote">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+                                </button>
                             </div>
                             ${cc > 0 ? `<button class="view-responses-btn" onclick="toggleResponses(${issue.id})">View ${cc} response${cc !== 1 ? 's' : ''}</button>` : `<span class="comment-count">No responses yet</span>`}
                         </div>
@@ -271,8 +268,41 @@
             } catch { el.innerHTML = '<p style="font-size:0.75rem;color:#e2001a;">Failed to load responses.</p>'; }
         }
 
-        /* ---- Voting ---- */
+        /* ---- Voting (optimistic, instant UI) ---- */
         async function vote(id, type) {
+            // Optimistic update: instantly update UI
+            const scoreEl = document.getElementById(`score-${id}`);
+            const vc = document.getElementById(`vc-${id}`);
+            const upBtn = vc.querySelector('.v-btn.up');
+            const downBtn = vc.querySelector('.v-btn.down');
+            const issue = allIssues.find(i => i.id === id);
+            if (!issue) return;
+
+            const oldUp = issue.upvotes || 0;
+            const oldDown = issue.downvotes || 0;
+
+            // Apply optimistic change
+            if (type === 'up') issue.upvotes = oldUp + 1;
+            else issue.downvotes = oldDown + 1;
+
+            const newScore = (issue.upvotes || 0) - (issue.downvotes || 0);
+            scoreEl.textContent = newScore;
+            scoreEl.className = `v-score ${newScore > 0 ? 'positive' : newScore < 0 ? 'negative' : ''}`;
+
+            // Animate
+            scoreEl.classList.remove('score-pulse');
+            void scoreEl.offsetWidth;
+            scoreEl.classList.add('score-pulse');
+
+            // Mark voted & disable buttons
+            upBtn.disabled = true;
+            downBtn.disabled = true;
+            if (type === 'up') { upBtn.classList.add('voted'); vc.classList.add('voted-up'); }
+            else { downBtn.classList.add('voted'); vc.classList.add('voted-down'); }
+
+            votedIssues.add(id + '-' + type);
+            localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
+
             try {
                 const res = await fetch(`/api/issues/${id}/vote`, {
                     method: 'POST',
@@ -281,20 +311,39 @@
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    votedIssues.add(id);
-                    localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
-                    document.getElementById(`score-${id}`).textContent = data.upvotes - data.downvotes;
-                    // Re-render to disable buttons
-                    renderFeed();
+                    issue.upvotes = data.upvotes;
+                    issue.downvotes = data.downvotes;
+                    const confirmed = data.upvotes - data.downvotes;
+                    scoreEl.textContent = confirmed;
+                    scoreEl.className = `v-score ${confirmed > 0 ? 'positive' : confirmed < 0 ? 'negative' : ''}`;
                 } else {
                     const err = await res.json();
                     if (err.alreadyVoted) {
-                        votedIssues.add(id);
+                        // Already counted server-side, keep UI locked
+                    } else {
+                        // Rollback
+                        issue.upvotes = oldUp;
+                        issue.downvotes = oldDown;
+                        const rollback = oldUp - oldDown;
+                        scoreEl.textContent = rollback;
+                        scoreEl.className = `v-score ${rollback > 0 ? 'positive' : rollback < 0 ? 'negative' : ''}`;
+                        upBtn.disabled = false; downBtn.disabled = false;
+                        upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
+                        vc.classList.remove('voted-up', 'voted-down');
+                        votedIssues.delete(id + '-' + type);
                         localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
-                        renderFeed();
                     }
                 }
             } catch (e) {
+                // Rollback on network error
+                issue.upvotes = oldUp;
+                issue.downvotes = oldDown;
+                scoreEl.textContent = oldUp - oldDown;
+                upBtn.disabled = false; downBtn.disabled = false;
+                upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
+                vc.classList.remove('voted-up', 'voted-down');
+                votedIssues.delete(id + '-' + type);
+                localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
                 console.error('Vote failed:', e);
             }
         }
@@ -419,33 +468,10 @@
             }
         });
 
-        /* ---- FAB scroll behavior ----
-           Show the floating Submit button as soon as the banner Submit
-           button leaves the viewport. Hide it when the banner button is
-           visible again. */
-        function setupFAB() {
-            const bannerBtn = document.getElementById('banner-submit-btn');
-            const fab = document.getElementById('fab-submit');
-            if (!bannerBtn || !fab || !('IntersectionObserver' in window)) {
-                // Fallback for very old browsers: just show FAB always
-                if (fab) fab.classList.add('visible');
-                return;
-            }
-            const observer = new IntersectionObserver(([entry]) => {
-                if (entry.isIntersecting) {
-                    fab.classList.remove('visible');
-                } else {
-                    fab.classList.add('visible');
-                }
-            }, { threshold: 0.1 });
-            observer.observe(bannerBtn);
-        }
-
         /* ---- Boot ---- */
         window.onload = async () => {
             await init();
             startPolling();
-            setupFAB();
         };
     </script>
 
