@@ -43,10 +43,6 @@
                     <span class="stat-num" id="stat-issues">0</span>
                     <span class="stat-label">Issues Raised</span>
                 </div>
-                <div class="stat-block">
-                    <span class="stat-num" id="stat-resolved">0</span>
-                    <span class="stat-label">Addressed</span>
-                </div>
             </div>
         </div>
     </section>
@@ -179,8 +175,6 @@
 
             // Campaign banner stats
             document.getElementById('stat-issues').textContent = allIssues.length;
-            const resolvedCount = allIssues.filter(i => i.status === 'resolved').length;
-            document.getElementById('stat-resolved').textContent = resolvedCount;
         }
 
         /* ---- Filtering ---- */
@@ -228,11 +222,11 @@
                         <p class="card-desc">${issue.description}</p>
                         <div class="card-footer">
                             <div class="vote-controls" id="vc-${issue.id}">
-                                <button class="v-btn up ${voteState === 'up' ? 'voted' : ''}" onclick="vote(${issue.id}, 'up')" ${voteState ? 'disabled' : ''} aria-label="Upvote">
+                                <button class="v-btn up ${voteState === 'up' ? 'voted' : ''}" onclick="vote(${issue.id}, 'up')" ${voteState === 'up' ? 'disabled' : ''} aria-label="Upvote">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
                                 </button>
                                 <span class="v-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : ''}" id="score-${issue.id}">${score}</span>
-                                <button class="v-btn down ${voteState === 'down' ? 'voted' : ''}" onclick="vote(${issue.id}, 'down')" ${voteState ? 'disabled' : ''} aria-label="Downvote">
+                                <button class="v-btn down ${voteState === 'down' ? 'voted' : ''}" onclick="vote(${issue.id}, 'down')" ${voteState === 'down' ? 'disabled' : ''} aria-label="Downvote">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
                                 </button>
                             </div>
@@ -266,9 +260,8 @@
             } catch { el.innerHTML = '<p style="font-size:0.75rem;color:#e2001a;">Failed to load responses.</p>'; }
         }
 
-        /* ---- Voting (optimistic, instant UI) ---- */
+        /* ---- Voting (optimistic, instant UI, switchable) ---- */
         async function vote(id, type) {
-            // Optimistic update: instantly update UI
             const scoreEl = document.getElementById(`score-${id}`);
             const vc = document.getElementById(`vc-${id}`);
             const upBtn = vc.querySelector('.v-btn.up');
@@ -278,10 +271,23 @@
 
             const oldUp = issue.upvotes || 0;
             const oldDown = issue.downvotes || 0;
+            const prevVote = votedIssues.has(id + '-up') ? 'up' : votedIssues.has(id + '-down') ? 'down' : null;
 
-            // Apply optimistic change
-            if (type === 'up') issue.upvotes = oldUp + 1;
-            else issue.downvotes = oldDown + 1;
+            // If clicking the same vote direction, do nothing
+            if (prevVote === type) return;
+
+            // Optimistic update
+            if (prevVote) {
+                // Switching vote: undo old, apply new
+                if (prevVote === 'up') issue.upvotes = oldUp - 1;
+                else issue.downvotes = oldDown - 1;
+                if (type === 'up') issue.upvotes = (issue.upvotes || 0) + 1;
+                else issue.downvotes = (issue.downvotes || 0) + 1;
+            } else {
+                // Fresh vote
+                if (type === 'up') issue.upvotes = oldUp + 1;
+                else issue.downvotes = oldDown + 1;
+            }
 
             const newScore = (issue.upvotes || 0) - (issue.downvotes || 0);
             scoreEl.textContent = newScore;
@@ -292,12 +298,14 @@
             void scoreEl.offsetWidth;
             scoreEl.classList.add('score-pulse');
 
-            // Mark voted & disable buttons
-            upBtn.disabled = true;
-            downBtn.disabled = true;
-            if (type === 'up') { upBtn.classList.add('voted'); vc.classList.add('voted-up'); }
-            else { downBtn.classList.add('voted'); vc.classList.add('voted-down'); }
+            // Update button states
+            upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
+            vc.classList.remove('voted-up', 'voted-down');
+            if (type === 'up') { upBtn.classList.add('voted'); upBtn.disabled = true; downBtn.disabled = false; vc.classList.add('voted-up'); }
+            else { downBtn.classList.add('voted'); downBtn.disabled = true; upBtn.disabled = false; vc.classList.add('voted-down'); }
 
+            // Update local storage
+            if (prevVote) votedIssues.delete(id + '-' + prevVote);
             votedIssues.add(id + '-' + type);
             localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
 
@@ -315,32 +323,38 @@
                     scoreEl.textContent = confirmed;
                     scoreEl.className = `v-score ${confirmed > 0 ? 'positive' : confirmed < 0 ? 'negative' : ''}`;
                 } else {
-                    const err = await res.json();
-                    if (err.alreadyVoted) {
-                        // Already counted server-side, keep UI locked
-                    } else {
-                        // Rollback
-                        issue.upvotes = oldUp;
-                        issue.downvotes = oldDown;
-                        const rollback = oldUp - oldDown;
-                        scoreEl.textContent = rollback;
-                        scoreEl.className = `v-score ${rollback > 0 ? 'positive' : rollback < 0 ? 'negative' : ''}`;
-                        upBtn.disabled = false; downBtn.disabled = false;
-                        upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
-                        vc.classList.remove('voted-up', 'voted-down');
-                        votedIssues.delete(id + '-' + type);
-                        localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
+                    // Rollback
+                    issue.upvotes = oldUp;
+                    issue.downvotes = oldDown;
+                    const rollback = oldUp - oldDown;
+                    scoreEl.textContent = rollback;
+                    scoreEl.className = `v-score ${rollback > 0 ? 'positive' : rollback < 0 ? 'negative' : ''}`;
+                    // Restore previous button state
+                    upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
+                    upBtn.disabled = false; downBtn.disabled = false;
+                    vc.classList.remove('voted-up', 'voted-down');
+                    votedIssues.delete(id + '-' + type);
+                    if (prevVote) {
+                        votedIssues.add(id + '-' + prevVote);
+                        if (prevVote === 'up') { upBtn.classList.add('voted'); upBtn.disabled = true; vc.classList.add('voted-up'); }
+                        else { downBtn.classList.add('voted'); downBtn.disabled = true; vc.classList.add('voted-down'); }
                     }
+                    localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
                 }
             } catch (e) {
                 // Rollback on network error
                 issue.upvotes = oldUp;
                 issue.downvotes = oldDown;
                 scoreEl.textContent = oldUp - oldDown;
-                upBtn.disabled = false; downBtn.disabled = false;
                 upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
+                upBtn.disabled = false; downBtn.disabled = false;
                 vc.classList.remove('voted-up', 'voted-down');
                 votedIssues.delete(id + '-' + type);
+                if (prevVote) {
+                    votedIssues.add(id + '-' + prevVote);
+                    if (prevVote === 'up') { upBtn.classList.add('voted'); upBtn.disabled = true; vc.classList.add('voted-up'); }
+                    else { downBtn.classList.add('voted'); downBtn.disabled = true; vc.classList.add('voted-down'); }
+                }
                 localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
                 console.error('Vote failed:', e);
             }
