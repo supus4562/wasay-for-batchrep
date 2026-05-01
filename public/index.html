@@ -62,16 +62,6 @@
                     <!-- Dynamically populated -->
                 </nav>
             </div>
-
-            <div class="sidebar-box">
-                <h3>Why This Forum?</h3>
-                <p style="font-size:0.78rem;color:#3a3a3a;line-height:1.6;">
-                    Most platforms collect feedback that goes nowhere. This forum
-                    is live, public, and permanent. No issue goes unseen, and
-                    every response stays on the record. That's the kind of
-                    representation SSE deserves.
-                </p>
-            </div>
         </aside>
 
         <!-- ---- Feed ---- -->
@@ -221,7 +211,7 @@
                 const score = (issue.upvotes || 0) - (issue.downvotes || 0);
                 const voteState = votedIssues.has(issue.id + '-up') ? 'up' : votedIssues.has(issue.id + '-down') ? 'down' : null;
                 const statusClass = issue.status || 'open';
-                const statusLabel = statusClass === 'open' ? 'Awaiting Response' : 'Addressed';
+                const statusLabel = statusClass === 'open' ? 'Awaiting Solution Proposal' : 'Solution Posted';
                 const date = new Date(issue.created_at).toLocaleDateString('en-GB', {
                     day: 'numeric', month: 'short', year: 'numeric'
                 });
@@ -266,9 +256,10 @@
                 if (!comments.length) { el.innerHTML = '<p style="font-size:0.75rem;color:#b0b0b0;">No visible responses.</p>'; return; }
                 el.innerHTML = comments.map(c => {
                     const isOfficial = c.author === OFFICIAL_RESPONDER;
+                    const label = isOfficial ? 'Solution Posted' : 'Response';
                     const d = new Date(c.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
                     return `<div class="response-item ${isOfficial ? 'official' : ''}">
-                        <span class="response-author">${c.author}</span><span class="response-date">${d}</span>
+                        <span class="response-author">${label}</span><span class="response-date">${d}</span>
                         <p class="response-body">${c.body}</p>
                     </div>`;
                 }).join('');
