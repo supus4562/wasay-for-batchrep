@@ -305,7 +305,7 @@ app.delete('/api/admin/comments/:id', requireAdmin, async (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`\n🗳️  Aapki Zabaan running on port ${PORT}\n`));
+app.listen(PORT, () => console.log(`\n🗳️  Aapki Zubaan running on port ${PORT}\n`));
 
 // =================== FRONTEND ROUTING (VERCEL FIX) ===================
 

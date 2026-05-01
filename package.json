@@ -1,7 +1,7 @@
 {
   "name": "aapki-zabaan",
   "version": "1.0.0",
-  "description": "Aapki Zabaan, community issue tracker for SSE batch representative accountability.",
+  "description": "Aapki Zubaan, community issue tracker for SSE batch representative accountability.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
