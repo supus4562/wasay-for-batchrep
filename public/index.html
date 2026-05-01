@@ -3,43 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Open Floor</title>
+    <title>The Open Forum — Wasay for Batch Representative</title>
+    <meta name="description" content="Voice your issues directly. Wasay listens, responds, and acts. The Open Forum is your space to be heard.">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- ======================== HEADER ======================== -->
     <header class="main-header">
         <div class="header-content">
-            <h1>The Open Floor</h1>
-            <p>Community-led transparency and change.</p>
+            <h1>The Open Forum</h1>
+            <p class="subtitle">
+                Your voice, unfiltered. Post any issue you face — from academics
+                to campus life — and <strong>Wasay</strong> will personally respond
+                with a real plan of action.
+            </p>
         </div>
     </header>
 
+    <!-- ======================== CAMPAIGN BANNER ======================== -->
+    <section class="campaign-banner">
+        <div class="campaign-inner">
+            <div class="campaign-text">
+                <h2>Wasay for Batch Representative</h2>
+                <p>
+                    This isn't a campaign promise — it's already happening. While
+                    others talk, Wasay built this platform so you can hold your
+                    representative accountable from day one. Every issue you
+                    post here gets a direct, public response. <strong>Transparency
+                    isn't optional — it's the default.</strong>
+                </p>
+            </div>
+            <div class="campaign-stats">
+                <div class="stat-block">
+                    <span class="stat-num" id="stat-issues">—</span>
+                    <span class="stat-label">Issues Raised</span>
+                </div>
+                <div class="stat-block">
+                    <span class="stat-num" id="stat-resolved">—</span>
+                    <span class="stat-label">Addressed</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================== MAIN GRID ======================== -->
     <div class="main-layout">
-        <!-- New Sidebar Design -->
+
+        <!-- ---- Sidebar ---- -->
         <aside class="sidebar">
             <div class="sidebar-box">
-                <h3>Explore</h3>
+                <h3>Categories</h3>
                 <nav class="cat-nav" id="category-list">
-                    <!-- Live categories injected here[cite: 2] -->
+                    <!-- Dynamically populated -->
                 </nav>
+            </div>
+
+            <div class="sidebar-box">
+                <h3>Filter by Status</h3>
+                <nav class="cat-nav" id="status-filters">
+                    <button class="cat-item active" data-status="all" onclick="filterStatus('all')">All Issues</button>
+                    <button class="cat-item" data-status="open" onclick="filterStatus('open')">Open</button>
+                    <button class="cat-item" data-status="resolved" onclick="filterStatus('resolved')">Resolved</button>
+                </nav>
+            </div>
+
+            <div class="sidebar-cta">
+                <button class="btn-submit-issue" id="open-modal-btn" onclick="openModal()">
+                    ＋ Submit an Issue
+                </button>
+            </div>
+
+            <div class="sidebar-box" style="margin-top:24px;">
+                <h3>Why Wasay?</h3>
+                <p style="font-size:0.78rem;color:#3a3a3a;line-height:1.6;">
+                    Most candidates make promises. Wasay built a platform.
+                    This forum is live, public, and permanent — no
+                    issue goes unseen. That's the kind of
+                    representation SSE deserves.
+                </p>
             </div>
         </aside>
 
-        <!-- New Feed Design -->
+        <!-- ---- Feed ---- -->
         <main class="feed-container">
             <div class="feed-header">
-                <h2>Active Issues</h2>
-                <div class="stats" id="issue-stats">Loading...</div>
+                <h2>Community Issues</h2>
+                <div class="stats" id="issue-stats">Loading…</div>
             </div>
-            
+
             <div id="q-li" class="issue-list">
-                <!-- Live issues injected here -->
+                <!-- Dynamically populated -->
             </div>
         </main>
     </div>
 
+    <!-- ======================== SUBMIT ISSUE MODAL ======================== -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h2>Raise an Issue</h2>
+            <form id="issue-form" onsubmit="submitIssue(event)">
+                <div class="form-group">
+                    <label for="issue-title">Title</label>
+                    <input type="text" id="issue-title" name="title" placeholder="Briefly describe the issue" required>
+                </div>
+                <div class="form-group">
+                    <label for="issue-category">Category</label>
+                    <select id="issue-category" name="category" required>
+                        <option value="" disabled selected>Select a category</option>
+                        <!-- Dynamically populated -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="issue-desc">Description</label>
+                    <textarea id="issue-desc" name="description" placeholder="Give details — the more specific, the better the response" required></textarea>
+                </div>
+                <button type="submit" class="btn-primary" id="submit-btn">Submit Issue</button>
+                <div class="form-msg" id="form-msg"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================== FOOTER ======================== -->
+    <footer class="main-footer">
+        <strong>The Open Forum</strong> &mdash; Built by <strong>Wasay</strong> for the batch.
+        Accountability starts here.
+    </footer>
+
+    <!-- ======================== SCRIPT ======================== -->
     <script>
         const votedIssues = new Set(JSON.parse(localStorage.getItem('votedIssues') || '[]'));
+        let allIssues = [];
+        let allCategories = [];
+        let activeCategory = 'all';
+        let activeStatus = 'all';
 
         function getFingerprint() {
             let fp = localStorage.getItem('deviceFingerprint');
@@ -50,72 +148,208 @@
             return fp;
         }
 
+        /* ---- Init ---- */
         async function init() {
             try {
                 const [catRes, issueRes] = await Promise.all([
                     fetch('/api/categories'),
                     fetch('/api/issues')
                 ]);
-                const categories = await catRes.json();
-                const issues = await issueRes.json();
+                allCategories = await catRes.json();
+                allIssues = await issueRes.json();
 
-                // Update Categories[cite: 2]
-                document.getElementById('category-list').innerHTML = categories.map(c => 
-                    `<button class="cat-item">${c.name}</button>`
-                ).join('');
-
-                // Update Stats
-                document.getElementById('issue-stats').textContent = `${issues.length} Issues Live`;
-
-                // Update Feed
-                const list = document.getElementById('q-li');
-                if (issues.length === 0) {
-                    list.innerHTML = `<div class="empty">No approved issues yet. Check back soon!</div>`;
-                    return;
-                }
-
-                list.innerHTML = issues.map(issue => {
-                    const score = (issue.upvotes || 0) - (issue.downvotes || 0);
-                    const hasVoted = votedIssues.has(issue.id);
-                    return `
-                        <div class="card">
-                            <div class="card-meta">
-                                <span class="badge">${issue.category}</span>
-                                <span>${new Date(issue.created_at).toLocaleDateString()}</span>
-                            </div>
-                            <h3 class="card-title">${issue.title}</h3>
-                            <p class="card-desc">${issue.description}</p>
-                            <div class="card-footer">
-                                <div class="vote-controls">
-                                    <button class="v-btn up" onclick="vote(${issue.id}, 'up')" ${hasVoted ? 'disabled' : ''}>▲</button>
-                                    <span class="v-score" id="score-${issue.id}">${score}</span>
-                                    <button class="v-btn down" onclick="vote(${issue.id}, 'down')" ${hasVoted ? 'disabled' : ''}>▼</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                renderCategories();
+                renderFeed();
+                updateStats();
             } catch (e) {
-                console.error("Connection failed", e);
+                console.error('Connection failed:', e);
+                document.getElementById('issue-stats').textContent = 'Connection error';
             }
         }
 
-        async function vote(id, type) {
-            const res = await fetch(`/api/issues/${id}/vote`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, fingerprint: getFingerprint() })
+        /* ---- Render Categories ---- */
+        function renderCategories() {
+            const nav = document.getElementById('category-list');
+            const allBtn = `<button class="cat-item ${activeCategory === 'all' ? 'active' : ''}" onclick="filterCategory('all')">All</button>`;
+            const catBtns = allCategories.map(c =>
+                `<button class="cat-item ${activeCategory === c.value ? 'active' : ''}" onclick="filterCategory('${c.value}')">${c.name}</button>`
+            ).join('');
+            nav.innerHTML = allBtn + catBtns;
+
+            // Populate modal select
+            const sel = document.getElementById('issue-category');
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="" disabled selected>Select a category</option>' +
+                allCategories.map(c => `<option value="${c.value}">${c.name}</option>`).join('');
+            if (currentVal) sel.value = currentVal;
+        }
+
+        /* ---- Stats ---- */
+        function updateStats() {
+            const filtered = getFilteredIssues();
+            document.getElementById('issue-stats').textContent = `${filtered.length} issue${filtered.length !== 1 ? 's' : ''} shown`;
+
+            // Campaign banner stats
+            document.getElementById('stat-issues').textContent = allIssues.length;
+            const resolvedCount = allIssues.filter(i => i.status === 'resolved').length;
+            document.getElementById('stat-resolved').textContent = resolvedCount;
+        }
+
+        /* ---- Filtering ---- */
+        function getFilteredIssues() {
+            return allIssues.filter(i => {
+                const catMatch = activeCategory === 'all' || i.category === activeCategory;
+                const statusMatch = activeStatus === 'all' || i.status === activeStatus;
+                return catMatch && statusMatch;
             });
-            if (res.ok) {
-                const data = await res.json();
-                votedIssues.add(id);
-                localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
-                document.getElementById(`score-${id}`).textContent = data.upvotes - data.downvotes;
-                init(); // Refresh to disable buttons
+        }
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            renderCategories();
+            renderFeed();
+            updateStats();
+        }
+
+        function filterStatus(status) {
+            activeStatus = status;
+            document.querySelectorAll('#status-filters .cat-item').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.status === status);
+            });
+            renderFeed();
+            updateStats();
+        }
+
+        /* ---- Render Feed ---- */
+        function renderFeed() {
+            const list = document.getElementById('q-li');
+            const issues = getFilteredIssues();
+
+            if (issues.length === 0) {
+                list.innerHTML = `<div class="empty">No issues found. Be the first — submit one above.</div>`;
+                return;
+            }
+
+            list.innerHTML = issues.map(issue => {
+                const score = (issue.upvotes || 0) - (issue.downvotes || 0);
+                const hasVoted = votedIssues.has(issue.id);
+                const statusClass = issue.status || 'open';
+                const statusLabel = statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+                const date = new Date(issue.created_at).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                });
+
+                return `
+                    <div class="card">
+                        <div class="card-meta">
+                            <span class="badge">${issue.category}</span>
+                            <span class="status-badge ${statusClass}">${statusLabel}</span>
+                            <span>${date}</span>
+                        </div>
+                        <h3 class="card-title">${issue.title}</h3>
+                        <p class="card-desc">${issue.description}</p>
+                        <div class="card-footer">
+                            <div class="vote-controls">
+                                <button class="v-btn up" onclick="vote(${issue.id}, 'up')" ${hasVoted ? 'disabled' : ''}>▲</button>
+                                <span class="v-score" id="score-${issue.id}">${score}</span>
+                                <button class="v-btn down" onclick="vote(${issue.id}, 'down')" ${hasVoted ? 'disabled' : ''}>▼</button>
+                            </div>
+                            <span class="comment-count">${issue.comment_count || 0} comment${(issue.comment_count || 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* ---- Voting ---- */
+        async function vote(id, type) {
+            try {
+                const res = await fetch(`/api/issues/${id}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, fingerprint: getFingerprint() })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    votedIssues.add(id);
+                    localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
+                    document.getElementById(`score-${id}`).textContent = data.upvotes - data.downvotes;
+                    // Re-render to disable buttons
+                    renderFeed();
+                } else {
+                    const err = await res.json();
+                    if (err.alreadyVoted) {
+                        votedIssues.add(id);
+                        localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
+                        renderFeed();
+                    }
+                }
+            } catch (e) {
+                console.error('Vote failed:', e);
             }
         }
 
+        /* ---- Modal ---- */
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.getElementById('form-msg').textContent = '';
+        }
+
+        // Close on backdrop click
+        document.getElementById('modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        /* ---- Submit Issue ---- */
+        async function submitIssue(e) {
+            e.preventDefault();
+            const title = document.getElementById('issue-title').value.trim();
+            const category = document.getElementById('issue-category').value;
+            const description = document.getElementById('issue-desc').value.trim();
+            const msgEl = document.getElementById('form-msg');
+            const btn = document.getElementById('submit-btn');
+
+            if (!title || !category || !description) {
+                msgEl.className = 'form-msg error';
+                msgEl.textContent = 'All fields are required.';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Submitting…';
+
+            try {
+                const res = await fetch('/api/issues', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, category, description })
+                });
+                if (res.ok) {
+                    msgEl.className = 'form-msg success';
+                    msgEl.textContent = 'Issue submitted! It will appear once reviewed.';
+                    document.getElementById('issue-form').reset();
+                    setTimeout(() => { closeModal(); init(); }, 1500);
+                } else {
+                    const err = await res.json();
+                    msgEl.className = 'form-msg error';
+                    msgEl.textContent = err.error || 'Submission failed.';
+                }
+            } catch {
+                msgEl.className = 'form-msg error';
+                msgEl.textContent = 'Network error. Try again.';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Issue';
+            }
+        }
+
+        /* ---- Boot ---- */
         window.onload = init;
     </script>
+
 </body>
 </html>
