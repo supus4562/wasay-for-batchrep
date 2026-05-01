@@ -229,6 +229,7 @@
                         </div>
                         <h3 class="card-title">${issue.title}</h3>
                         <p class="card-desc">${issue.description}</p>
+                        ${issue.proposed_solution ? `<div class="card-proposed-solution"><h4>Proposed Solution</h4><p>${issue.proposed_solution}</p></div>` : ''}
                         <div class="card-footer">
                             <div class="vote-controls" id="vc-${issue.id}">
                                 <button class="v-btn up ${voteState === 'up' ? 'voted' : ''}" onclick="vote(${issue.id}, 'up')" aria-label="Upvote">

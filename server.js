@@ -227,8 +227,8 @@ app.patch('/api/admin/campaign-votes', requireAdmin, async (req, res) => {
 });
 
 app.patch('/api/admin/issues/:id', requireAdmin, async (req, res) => {
-  const { title, description, category } = req.body;
-  await pool.query('UPDATE issues SET title = $1, description = $2, category = $3 WHERE id = $4', [title, description, category, req.params.id]);
+  const { title, description, category, proposedSolution } = req.body;
+  await pool.query('UPDATE issues SET title = $1, description = $2, category = $3, proposed_solution = $4 WHERE id = $5', [title, description, category, proposedSolution || null, req.params.id]);
   res.json({ success: true });
 });
 

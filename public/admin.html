@@ -178,6 +178,9 @@
                                 <div class="form-group"><label>Description</label>
                                     <textarea id="ed-d-${item.id}" rows="3">${item.description}</textarea>
                                 </div>
+                                <div class="form-group"><label>Proposed Solution</label>
+                                    <textarea id="ed-s-${item.id}" rows="2" placeholder="Add or edit proposed solution…">${item.proposed_solution || ''}</textarea>
+                                </div>
                                 <div style="display:flex;gap:10px;">
                                     <div class="form-group" style="flex:1;"><label>Upvotes</label>
                                         <input type="number" id="ed-u-${item.id}" value="${item.upvotes||0}" min="0">
@@ -219,7 +222,8 @@
             const title=document.getElementById(`ed-t-${id}`).value.trim();
             const category=document.getElementById(`ed-c-${id}`).value;
             const description=document.getElementById(`ed-d-${id}`).value.trim();
-            await fetch(`/api/admin/issues/${id}`,{method:'PATCH',headers:AUTH,body:JSON.stringify({title,description,category})});
+            const proposedSolution=document.getElementById(`ed-s-${id}`).value.trim();
+            await fetch(`/api/admin/issues/${id}`,{method:'PATCH',headers:AUTH,body:JSON.stringify({title,description,category,proposedSolution})});
             loadAll();
         }
 
