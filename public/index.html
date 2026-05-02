@@ -1,40 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aapki Zubaan</title>
-    <meta name="description" content="Aapki Zubaan, your voice, unfiltered. Raise any issue you face and get a direct, public response.">
+    <meta name="description"
+        content="Aapki Zubaan, your voice, unfiltered. Raise any issue you face and get a direct, public response.">
     <link rel="stylesheet" href="style.css">
     <script>
-      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
+
 <body>
 
     <!-- ======================== HEADER ======================== -->
     <header class="main-header">
         <div class="header-content">
             <h1>Aapki Zubaan</h1>
-            <p class="initiative-text">Initiative of Wasay M. Jehangiri</p>
+            <p class="initiative-text">Initiative of Wasay Muhammad Jehangiri</p>
             <div class="subtitle-wrap">
                 <p class="subtitle">
-                    Aapki Zubaan is a simple idea: instead of decisions being made for the batch, they come from the batch. What gets upvoted is what gets priority and what gets priority is what actually gets worked on. It’s your voice that shapes what comes next so speak up!
+                    Aapki Zubaan is a simple idea: instead of decisions being made for the batch, they come from the
+                    batch. What gets upvoted is what gets priority and what gets priority is what actually gets worked
+                    on. It’s your voice that shapes what comes next so speak up!
                 </p>
             </div>
-            
+
             <details class="editor-notes">
                 <summary>Editor's Note</summary>
                 <div class="editor-notes-content">
                     <p>Every election season, you hear the same thing “we’ll fix the problems.”</p>
                     <p>But the truth is most of the time those problems are decided for you, not by you.</p>
                     <p>This platform is an attempt to change that, even in a small way.<br>
-                    Instead of candidates guessing what matters this space lets the batch speak for itself. You can share issues you actually face and more importantly see what others relate to and care about.</p>
-                    <p>The idea is simple: the problems that rise to the top here should be the ones that get attention not the ones that sound the best in a campaign.</p>
-                    <p>If this works the way it should then it shifts some power back to you. It makes candidates respond instead of decide.<br>
-                    So please use it. Post honestly. Upvote what matters.<br>
-                    So At the end of the day, whoever wins the outcome should reflect your priorities.</p>
+                        Instead of candidates guessing what matters this space lets the batch speak for itself. You can
+                        share issues you actually face and more importantly see what others relate to and care about.
+                    </p>
+                    <p>The idea is simple: the problems that rise to the top here should be the ones that get attention
+                        not the ones that sound the best in a campaign.</p>
+                    <p>If this works the way it should then it shifts some power back to you. It makes candidates
+                        respond instead of decide.<br>
+                        So please use it. Post honestly. Upvote what matters.<br>
+                        So At the end of the day, whoever wins the outcome should reflect your priorities.</p>
                     <p><strong>Jeet aapki honi chahiye</strong></p>
                 </div>
             </details>
@@ -103,11 +112,14 @@
                 </div>
                 <div class="form-group">
                     <label for="issue-desc">Description</label>
-                    <textarea id="issue-desc" name="description" placeholder="Give details. The more specific, the better the response." required></textarea>
+                    <textarea id="issue-desc" name="description"
+                        placeholder="Give details. The more specific, the better the response." required></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="issue-proposed-solution">Proposed Solution <span style="color:#888; font-weight:normal; font-size:0.75rem;">(Optional)</span></label>
-                    <textarea id="issue-proposed-solution" name="proposedSolution" placeholder="How would you fix this? (This helps us understand your perspective better)"></textarea>
+                    <label for="issue-proposed-solution">Proposed Solution <span
+                            style="color:#888; font-weight:normal; font-size:0.75rem;">(Optional)</span></label>
+                    <textarea id="issue-proposed-solution" name="proposedSolution"
+                        placeholder="How would you fix this? (This helps us understand your perspective better)"></textarea>
                 </div>
                 <button type="submit" class="btn-primary" id="submit-btn">Submit Issue</button>
                 <div class="form-msg" id="form-msg"></div>
@@ -265,7 +277,7 @@
                 el.innerHTML = comments.map(c => {
                     const isOfficial = c.author === OFFICIAL_RESPONDER;
                     const label = isOfficial ? 'Solution Posted' : 'Response';
-                    const d = new Date(c.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+                    const d = new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
                     return `<div class="response-item ${isOfficial ? 'official' : ''}">
                         <span class="response-author">${label}</span><span class="response-date">${d}</span>
                         <p class="response-body">${c.body}</p>
@@ -277,10 +289,10 @@
         /* ---- Voting (optimistic, instant UI, switchable & un-votable) ---- */
         const votingInProgress = new Set();
         const voteRateLimits = {};
-        
+
         async function vote(id, type) {
             if (votingInProgress.has(id)) return;
-            
+
             const now = Date.now();
             if (!voteRateLimits[id]) voteRateLimits[id] = [];
             voteRateLimits[id] = voteRateLimits[id].filter(t => now - t < 60000);
@@ -288,7 +300,7 @@
                 alert("Please wait a minute before changing your vote again to prevent spam.");
                 return;
             }
-            
+
             votingInProgress.add(id);
             voteRateLimits[id].push(now);
 
@@ -339,7 +351,7 @@
             // Update button states
             upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
             vc.classList.remove('voted-up', 'voted-down');
-            
+
             if (actionType !== 'unvote') {
                 if (type === 'up') { upBtn.classList.add('voted'); vc.classList.add('voted-up'); }
                 else { downBtn.classList.add('voted'); vc.classList.add('voted-down'); }
@@ -373,10 +385,10 @@
                 const rollback = oldUp - oldDown;
                 scoreEl.textContent = rollback;
                 scoreEl.className = `v-score ${rollback > 0 ? 'positive' : rollback < 0 ? 'negative' : ''}`;
-                
+
                 upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
                 vc.classList.remove('voted-up', 'voted-down');
-                
+
                 votedIssues.delete(id + '-' + type);
                 if (prevVote) {
                     votedIssues.add(id + '-' + prevVote);
@@ -401,7 +413,7 @@
         }
 
         // Close on backdrop click
-        document.getElementById('modal-overlay').addEventListener('click', function(e) {
+        document.getElementById('modal-overlay').addEventListener('click', function (e) {
             if (e.target === this) closeModal();
         });
 
@@ -540,4 +552,5 @@
     </script>
 
 </body>
+
 </html>
