@@ -83,8 +83,14 @@
         <!-- ---- Feed ---- -->
         <main class="feed-container">
             <div class="feed-header">
-                <h2>Community Issues</h2>
-                <div class="stats" id="issue-stats">Loading…</div>
+                <div class="feed-title-wrap">
+                    <h2>Community Issues</h2>
+                    <div class="stats" id="issue-stats">Loading…</div>
+                </div>
+                <div class="sort-toggle">
+                    <button class="sort-btn active" id="sort-top" onclick="setSort('top')">Top Voted</button>
+                    <button class="sort-btn" id="sort-latest" onclick="setSort('latest')">Latest</button>
+                </div>
             </div>
 
             <div id="q-li" class="issue-list">
@@ -152,6 +158,7 @@
         let allIssues = [];
         let allCategories = [];
         let activeCategory = 'all';
+        let activeSort = 'top';
         let pollIntervalId = null;
 
         function getFingerprint() {
@@ -208,11 +215,32 @@
             document.getElementById('stat-issues').textContent = allIssues.length;
         }
 
-        /* ---- Filtering ---- */
+        /* ---- Filtering and Sorting ---- */
         function getFilteredIssues() {
-            return allIssues.filter(i => {
+            let filtered = allIssues.filter(i => {
                 return activeCategory === 'all' || i.category === activeCategory;
             });
+
+            if (activeSort === 'latest') {
+                filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            } else {
+                // 'top' sort
+                filtered.sort((a, b) => {
+                    const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+                    const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+                });
+            }
+
+            return filtered;
+        }
+
+        function setSort(type) {
+            activeSort = type;
+            document.getElementById('sort-top').classList.toggle('active', type === 'top');
+            document.getElementById('sort-latest').classList.toggle('active', type === 'latest');
+            renderFeed();
         }
 
         function filterCategory(cat) {
