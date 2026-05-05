@@ -107,7 +107,13 @@
         <!-- ---- Feed ---- -->
         <main class="feed-container">
             <div class="feed-header">
-                <h2>Community Issues</h2>
+                <div class="feed-title-wrap">
+                    <h2>Community Issues</h2>
+                    <div class="sort-toggle" role="group" aria-label="Sort order">
+                        <button class="sort-btn active" id="sort-top" onclick="setSort('top')">Top Votes</button>
+                        <button class="sort-btn" id="sort-latest" onclick="setSort('latest')">Latest</button>
+                    </div>
+                </div>
                 <div class="stats" id="issue-stats">Loading…</div>
             </div>
 
@@ -211,6 +217,7 @@
         let allIssues = [];
         let allCategories = [];
         let activeCategory = 'all';
+        let sortMode = 'top'; // 'top' | 'latest'
         let pollIntervalId = null;
 
         function getFingerprint() {
@@ -283,11 +290,30 @@
                 allIssues.length;
         }
 
+        /* ---- Sorting ---- */
+        function setSort(mode) {
+            sortMode = mode;
+            document.getElementById('sort-top').classList.toggle('active', mode === 'top');
+            document.getElementById('sort-latest').classList.toggle('active', mode === 'latest');
+            renderFeed();
+            updateStats();
+        }
+
         /* ---- Filtering ---- */
         function getFilteredIssues() {
-            return allIssues.filter(i => {
+            const filtered = allIssues.filter(i => {
                 return activeCategory === 'all' || i.category === activeCategory;
             });
+
+            if (sortMode === 'top') {
+                return [...filtered].sort((a, b) => {
+                    const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+                    const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+                    return scoreB - scoreA;
+                });
+            }
+            // 'latest': preserve server order (newest first)
+            return filtered;
         }
 
         function filterCategory(cat) {
