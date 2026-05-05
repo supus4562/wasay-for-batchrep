@@ -1,74 +1,49 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aapki Zubaan</title>
     <meta name="description"
-        content="Aapki Zubaan, your voice, unfiltered. Raise any issue you face and get a direct, public response." />
-    <link rel="stylesheet" href="style.css" />
+        content="Aapki Zubaan, your voice, unfiltered. Raise any issue you face and get a direct, public response.">
+    <link rel="stylesheet" href="style.css">
     <script>
-        window.va =
-            window.va ||
-            function () {
-                (window.vaq = window.vaq || []).push(arguments);
-            };
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
 
 <body>
+
     <!-- ======================== HEADER ======================== -->
     <header class="main-header">
         <div class="header-content">
             <h1>Aapki Zubaan</h1>
-            <p class="initiative-text">
-                An Initiative of Wasay Muhammad Jehangiri
-            </p>
+            <p class="initiative-text">An Initiative of Wasay Muhammad Jehangiri</p>
             <div class="subtitle-wrap">
                 <p class="subtitle">
-                    Aapki Zubaan is a simple idea: instead of decisions
-                    being made for the batch, they come from the batch. What
-                    gets upvoted is what gets priority and what gets
-                    priority is what actually gets worked on. It’s your
-                    voice that shapes what comes next so speak up!
+                    Aapki Zubaan is a simple idea: instead of decisions being made for the batch, they come from the
+                    batch. What gets upvoted is what gets priority and what gets priority is what actually gets worked
+                    on. It’s your voice that shapes what comes next so speak up!
                 </p>
             </div>
 
             <details class="editor-notes">
                 <summary>Editor's Note</summary>
                 <div class="editor-notes-content">
-                    <p>
-                        Every election season, you hear the same thing
-                        “we’ll fix the problems.”
+                    <p>Every election season, you hear the same thing “we’ll fix the problems.”</p>
+                    <p>But the truth is most of the time those problems are decided for you, not by you.</p>
+                    <p>This platform is an attempt to change that, even in a small way.<br>
+                        Instead of candidates guessing what matters this space lets the batch speak for itself. You can
+                        share issues you actually face and more importantly see what others relate to and care about.
                     </p>
-                    <p>
-                        But the truth is most of the time those problems are
-                        decided for you, not by you.
-                    </p>
-                    <p>
-                        This platform is an attempt to change that, even in
-                        a small way.<br />
-                        Instead of candidates guessing what matters this
-                        space lets the batch speak for itself. You can share
-                        issues you actually face and more importantly see
-                        what others relate to and care about.
-                    </p>
-                    <p>
-                        The idea is simple: the problems that rise to the
-                        top here should be the ones that get attention not
-                        the ones that sound the best in a campaign.
-                    </p>
-                    <p>
-                        If this works the way it should then it shifts some
-                        power back to you. It makes candidates respond
-                        instead of decide.<br />
-                        So please use it. Post honestly. Upvote what
-                        matters.<br />
-                        So At the end of the day, whoever wins the outcome
-                        should reflect your priorities.
-                    </p>
+                    <p>The idea is simple: the problems that rise to the top here should be the ones that get attention
+                        not the ones that sound the best in a campaign.</p>
+                    <p>If this works the way it should then it shifts some power back to you. It makes candidates
+                        respond instead of decide.<br>
+                        So please use it. Post honestly. Upvote what matters.<br>
+                        So At the end of the day, whoever wins the outcome should reflect your priorities.</p>
                     <p><strong>Jeet aapki honi chahiye</strong></p>
                 </div>
             </details>
@@ -94,6 +69,7 @@
 
     <!-- ======================== MAIN GRID ======================== -->
     <div class="main-layout">
+
         <!-- ---- Sidebar ---- -->
         <aside class="sidebar">
             <div class="sidebar-box">
@@ -109,12 +85,12 @@
             <div class="feed-header">
                 <div class="feed-title-wrap">
                     <h2>Community Issues</h2>
-                    <div class="sort-toggle" role="group" aria-label="Sort order">
-                        <button class="sort-btn active" id="sort-top" onclick="setSort('top')">Top Votes</button>
-                        <button class="sort-btn" id="sort-latest" onclick="setSort('latest')">Latest</button>
-                    </div>
+                    <div class="stats" id="issue-stats">Loading…</div>
                 </div>
-                <div class="stats" id="issue-stats">Loading…</div>
+                <div class="sort-toggle">
+                    <button class="sort-btn active" id="sort-top" onclick="setSort('top')">Top Voted</button>
+                    <button class="sort-btn" id="sort-latest" onclick="setSort('latest')">Latest</button>
+                </div>
             </div>
 
             <div id="q-li" class="issue-list">
@@ -126,22 +102,17 @@
     <!-- ======================== SUBMIT ISSUE MODAL ======================== -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal">
-            <button class="modal-close" onclick="closeModal()">
-                &times;
-            </button>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
             <h2>Raise an Issue</h2>
             <form id="issue-form" onsubmit="submitIssue(event)">
                 <div class="form-group">
                     <label for="issue-title">Title</label>
-                    <input type="text" id="issue-title" name="title" placeholder="Briefly describe the issue"
-                        required />
+                    <input type="text" id="issue-title" name="title" placeholder="Briefly describe the issue" required>
                 </div>
                 <div class="form-group">
                     <label for="issue-category">Category</label>
                     <select id="issue-category" name="category" required>
-                        <option value="" disabled selected>
-                            Select a category
-                        </option>
+                        <option value="" disabled selected>Select a category</option>
                         <!-- Dynamically populated -->
                     </select>
                 </div>
@@ -151,56 +122,33 @@
                         placeholder="Give details. The more specific, the better the response." required></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="issue-proposed-solution">Proposed Solution
-                        <span style="
-                                    color: #888;
-                                    font-weight: normal;
-                                    font-size: 0.75rem;
-                                ">(Optional)</span></label>
+                    <label for="issue-proposed-solution">Proposed Solution <span
+                            style="color:#888; font-weight:normal; font-size:0.75rem;">(Optional)</span></label>
                     <textarea id="issue-proposed-solution" name="proposedSolution"
                         placeholder="How would you fix this? (This helps us understand your perspective better)"></textarea>
                 </div>
-                <button type="submit" class="btn-primary" id="submit-btn">
-                    Submit Issue
-                </button>
+                <button type="submit" class="btn-primary" id="submit-btn">Submit Issue</button>
                 <div class="form-msg" id="form-msg"></div>
             </form>
         </div>
     </div>
 
     <!-- ======================== FOOTER ======================== -->
-    <footer class="main-footer" style="padding-bottom: var(--sp-5)">
-        <strong>Aapki Zubaan</strong>. Built for the batch. Accountability
-        starts here. <br /><br />
-        <span style="
-                    opacity: 0.8;
-                    font-size: 0.9em;
-                    text-transform: none;
-                    letter-spacing: 0.5px;
-                ">For inquiries and queries related to the website, email at
-            29100381@lums.edu.pk</span>
+    <footer class="main-footer" style="padding-bottom: var(--sp-5);">
+        <strong>Aapki Zubaan</strong>. Built for the batch.
+        Accountability starts here.
+        <br><br>
+        <span style="opacity: 0.8; font-size: 0.9em; text-transform: none; letter-spacing: 0.5px;">For inquiries and
+            queries related to the website, message +92 3156308885</span>
 
-        <div style="
-                    margin-top: var(--sp-4);
-                    max-width: 800px;
-                    margin-left: auto;
-                    margin-right: auto;
-                    padding: 0 var(--sp-3);
-                    opacity: 0.5;
-                    font-size: 0.7em;
-                    text-transform: none;
-                    line-height: 1.5;
-                    letter-spacing: 0.3px;
-                ">
-            <strong>Disclaimer:</strong> This platform is an independent,
-            community-driven initiative and is not affiliated with, nor does
-            it endorse, any Student Council candidate or campaign. All
-            issues are user-generated, and the platform administrators
-            exercise no editorial control over the content submitted by the
-            community. The developers and owners of this site bear no
-            responsibility or liability for any controversies, disputes, or
-            claims arising from user-posted content. The views expressed
-            herein belong solely to the individual contributors.
+        <div
+            style="margin-top: var(--sp-4); max-width: 800px; margin-left: auto; margin-right: auto; padding: 0 var(--sp-3); opacity: 0.5; font-size: 0.7em; text-transform: none; line-height: 1.5; letter-spacing: 0.3px;">
+            <strong>Disclaimer:</strong> This platform is an independent, community-driven initiative and is not
+            affiliated with, nor does it endorse, any Student Council candidate or campaign. All issues are
+            user-generated, and the platform administrators exercise no editorial control over the content submitted by
+            the community. The developers and owners of this site bear no responsibility or liability for any
+            controversies, disputes, or claims arising from user-posted content. The views expressed herein belong
+            solely to the individual contributors.
         </div>
     </footer>
 
@@ -217,18 +165,14 @@
         let allIssues = [];
         let allCategories = [];
         let activeCategory = 'all';
-        let sortMode = 'top'; // 'top' | 'latest'
+        let activeSort = 'top';
         let pollIntervalId = null;
 
         function getFingerprint() {
-            let fp = localStorage.getItem("deviceFingerprint");
+            let fp = localStorage.getItem('deviceFingerprint');
             if (!fp) {
-                fp =
-                    "fp-" +
-                    Date.now().toString(36) +
-                    "-" +
-                    Math.random().toString(36).slice(2, 10);
-                localStorage.setItem("deviceFingerprint", fp);
+                fp = 'fp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+                localStorage.setItem('deviceFingerprint', fp);
             }
             return fp;
         }
@@ -237,8 +181,8 @@
         async function init() {
             try {
                 const [catRes, issueRes] = await Promise.all([
-                    fetch("/api/categories"),
-                    fetch("/api/issues"),
+                    fetch('/api/categories'),
+                    fetch('/api/issues')
                 ]);
                 allCategories = await catRes.json();
                 allIssues = await issueRes.json();
@@ -247,73 +191,63 @@
                 renderFeed();
                 updateStats();
             } catch (e) {
-                console.error("Connection failed:", e);
-                document.getElementById("issue-stats").textContent =
-                    "Connection error";
+                console.error('Connection failed:', e);
+                document.getElementById('issue-stats').textContent = 'Connection error';
             }
         }
 
         /* ---- Render Categories ---- */
         function renderCategories() {
-            const nav = document.getElementById("category-list");
-            const allBtn = `<button class="cat-item ${activeCategory === "all" ? "active" : ""}" onclick="filterCategory('all')">All</button>`;
-            const catBtns = allCategories
-                .map(
-                    (c) =>
-                        `<button class="cat-item ${activeCategory === c.value ? "active" : ""}" onclick="filterCategory('${c.value}')">${c.name}</button>`,
-                )
-                .join("");
+            const nav = document.getElementById('category-list');
+            const allBtn = `<button class="cat-item ${activeCategory === 'all' ? 'active' : ''}" onclick="filterCategory('all')">All</button>`;
+            const catBtns = allCategories.map(c =>
+                `<button class="cat-item ${activeCategory === c.value ? 'active' : ''}" onclick="filterCategory('${c.value}')">${c.name}</button>`
+            ).join('');
             nav.innerHTML = allBtn + catBtns;
 
             // Populate modal select
-            const sel = document.getElementById("issue-category");
+            const sel = document.getElementById('issue-category');
             const currentVal = sel.value;
-            sel.innerHTML =
-                '<option value="" disabled selected>Select a category</option>' +
-                allCategories
-                    .map(
-                        (c) =>
-                            `<option value="${c.value}">${c.name}</option>`,
-                    )
-                    .join("");
+            sel.innerHTML = '<option value="" disabled selected>Select a category</option>' +
+                allCategories.map(c => `<option value="${c.value}">${c.name}</option>`).join('');
             if (currentVal) sel.value = currentVal;
         }
 
         /* ---- Stats ---- */
         function updateStats() {
             const filtered = getFilteredIssues();
-            document.getElementById("issue-stats").textContent =
-                `${filtered.length} issue${filtered.length !== 1 ? "s" : ""} shown`;
+            document.getElementById('issue-stats').textContent = `${filtered.length} issue${filtered.length !== 1 ? 's' : ''} shown`;
 
             // Campaign banner stats
-            document.getElementById("stat-issues").textContent =
-                allIssues.length;
+            document.getElementById('stat-issues').textContent = allIssues.length;
         }
 
-        /* ---- Sorting ---- */
-        function setSort(mode) {
-            sortMode = mode;
-            document.getElementById('sort-top').classList.toggle('active', mode === 'top');
-            document.getElementById('sort-latest').classList.toggle('active', mode === 'latest');
-            renderFeed();
-            updateStats();
-        }
-
-        /* ---- Filtering ---- */
+        /* ---- Filtering and Sorting ---- */
         function getFilteredIssues() {
-            const filtered = allIssues.filter(i => {
+            let filtered = allIssues.filter(i => {
                 return activeCategory === 'all' || i.category === activeCategory;
             });
 
-            if (sortMode === 'top') {
-                return [...filtered].sort((a, b) => {
+            if (activeSort === 'latest') {
+                filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            } else {
+                // 'top' sort
+                filtered.sort((a, b) => {
                     const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
                     const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
-                    return scoreB - scoreA;
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
                 });
             }
-            // 'latest': preserve server order (newest first)
+
             return filtered;
+        }
+
+        function setSort(type) {
+            activeSort = type;
+            document.getElementById('sort-top').classList.toggle('active', type === 'top');
+            document.getElementById('sort-latest').classList.toggle('active', type === 'latest');
+            renderFeed();
         }
 
         function filterCategory(cat) {
@@ -325,7 +259,7 @@
 
         /* ---- Render Feed ---- */
         function renderFeed() {
-            const list = document.getElementById("q-li");
+            const list = document.getElementById('q-li');
             const issues = getFilteredIssues();
 
             if (issues.length === 0) {
@@ -334,92 +268,61 @@
             }
 
             const escapeHTML = (str) => {
-                if (!str) return "";
-                return str
-                    .toString()
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
+                if (!str) return '';
+                return str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
             };
 
-            list.innerHTML = issues
-                .map((issue) => {
-                    const score =
-                        (issue.upvotes || 0) - (issue.downvotes || 0);
-                    const voteState = votedIssues.has(issue.id + "-up")
-                        ? "up"
-                        : votedIssues.has(issue.id + "-down")
-                            ? "down"
-                            : null;
-                    const statusClass = issue.status || "open";
+            list.innerHTML = issues.map(issue => {
+                const score = (issue.upvotes || 0) - (issue.downvotes || 0);
+                const voteState = votedIssues.has(issue.id + '-up') ? 'up' : votedIssues.has(issue.id + '-down') ? 'down' : null;
+                const statusClass = issue.status || 'open';
 
-                    return `
-                    <div class="card">
-                        <div class="card-meta">
-                            <span class="badge">${escapeHTML(issue.category)}</span>
-                            ${statusClass === "resolved" ? '<span class="status-badge resolved">Solution Posted</span>' : ""}
-                        </div>
-                        <h3 class="card-title">${escapeHTML(issue.title)}</h3>
-                        <p class="card-desc">${escapeHTML(issue.description).replace(/\n/g, "<br>")}</p>
-                        ${issue.proposed_solution ? `<div class="card-proposed-solution"><h4>Proposed Solution</h4><p>${escapeHTML(issue.proposed_solution).replace(/\n/g, "<br>")}</p></div>` : ""}
-                        <div class="card-footer">
-                            <div class="vote-controls" id="vc-${issue.id}">
-                                <button class="v-btn up ${voteState === "up" ? "voted" : ""}" onclick="vote(${issue.id}, 'up')" aria-label="Upvote">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
-                                </button>
-                                <span class="v-score ${score > 0 ? "positive" : score < 0 ? "negative" : ""}" id="score-${issue.id}">${score}</span>
-                                <button class="v-btn down ${voteState === "down" ? "voted" : ""}" onclick="vote(${issue.id}, 'down')" aria-label="Downvote">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
-                                </button>
-                            </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                })
-                .join("");
+                return `
+                   <div class="card">
+                       <div class="card-meta">
+                           <span class="badge">${escapeHTML(issue.category)}</span>
+                           ${statusClass === 'resolved' ? '<span class="status-badge resolved">Solution Posted</span>' : ''}
+                       </div>
+                       <h3 class="card-title">${escapeHTML(issue.title)}</h3>
+                       <p class="card-desc">${escapeHTML(issue.description).replace(/\n/g, '<br>')}</p>
+                       ${issue.proposed_solution ? `<div class="card-proposed-solution"><h4>Proposed Solution</h4><p>${escapeHTML(issue.proposed_solution).replace(/\n/g, '<br>')}</p></div>` : ''}
+                       <div class="card-footer">
+                           <div class="vote-controls" id="vc-${issue.id}">
+                               <button class="v-btn up ${voteState === 'up' ? 'voted' : ''}" onclick="vote(${issue.id}, 'up')" aria-label="Upvote">
+                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+                               </button>
+                               <span class="v-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : ''}" id="score-${issue.id}">${score}</span>
+                               <button class="v-btn down ${voteState === 'down' ? 'voted' : ''}" onclick="vote(${issue.id}, 'down')" aria-label="Downvote">
+                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+                               </button>
+                           </div>
+                           </div>
+                       </div>
+                   </div>
+               `;
+            }).join('');
         }
 
         /* ---- Load & Toggle Responses ---- */
         async function toggleResponses(id) {
             const el = document.getElementById(`responses-${id}`);
-            if (el.style.display !== "none") {
-                el.style.display = "none";
-                return;
-            }
-            el.style.display = "block";
-            el.innerHTML =
-                '<p style="font-size:0.75rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">Loading…</p>';
+            if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+            el.style.display = 'block';
+            el.innerHTML = '<p style="font-size:0.75rem;color:#b0b0b0;text-transform:uppercase;letter-spacing:1px;">Loading…</p>';
             try {
                 const res = await fetch(`/api/issues/${id}/comments`);
                 const comments = await res.json();
-                if (!comments.length) {
-                    el.innerHTML =
-                        '<p style="font-size:0.75rem;color:#b0b0b0;">No visible responses.</p>';
-                    return;
-                }
-                el.innerHTML = comments
-                    .map((c) => {
-                        const isOfficial = c.author === OFFICIAL_RESPONDER;
-                        const label = isOfficial
-                            ? "Solution Posted"
-                            : "Response";
-                        const d = new Date(c.created_at).toLocaleDateString(
-                            "en-GB",
-                            { day: "numeric", month: "short" },
-                        );
-                        return `<div class="response-item ${isOfficial ? "official" : ""}">
-                        <span class="response-author">${label}</span><span class="response-date">${d}</span>
-                        <p class="response-body">${c.body}</p>
-                    </div>`;
-                    })
-                    .join("");
-            } catch {
-                el.innerHTML =
-                    '<p style="font-size:0.75rem;color:#e2001a;">Failed to load responses.</p>';
-            }
+                if (!comments.length) { el.innerHTML = '<p style="font-size:0.75rem;color:#b0b0b0;">No visible responses.</p>'; return; }
+                el.innerHTML = comments.map(c => {
+                    const isOfficial = c.author === OFFICIAL_RESPONDER;
+                    const label = isOfficial ? 'Solution Posted' : 'Response';
+                    const d = new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    return `<div class="response-item ${isOfficial ? 'official' : ''}">
+                       <span class="response-author">${label}</span><span class="response-date">${d}</span>
+                       <p class="response-body">${c.body}</p>
+                   </div>`;
+                }).join('');
+            } catch { el.innerHTML = '<p style="font-size:0.75rem;color:#e2001a;">Failed to load responses.</p>'; }
         }
 
         /* ---- Voting (optimistic, instant UI, switchable & un-votable) ---- */
@@ -431,13 +334,9 @@
 
             const now = Date.now();
             if (!voteRateLimits[id]) voteRateLimits[id] = [];
-            voteRateLimits[id] = voteRateLimits[id].filter(
-                (t) => now - t < 60000,
-            );
+            voteRateLimits[id] = voteRateLimits[id].filter(t => now - t < 60000);
             if (voteRateLimits[id].length >= 2) {
-                alert(
-                    "Please wait a minute before changing your vote again to prevent spam.",
-                );
+                alert("Please wait a minute before changing your vote again to prevent spam.");
                 return;
             }
 
@@ -446,9 +345,9 @@
 
             const scoreEl = document.getElementById(`score-${id}`);
             const vc = document.getElementById(`vc-${id}`);
-            const upBtn = vc.querySelector(".v-btn.up");
-            const downBtn = vc.querySelector(".v-btn.down");
-            const issue = allIssues.find((i) => i.id === id);
+            const upBtn = vc.querySelector('.v-btn.up');
+            const downBtn = vc.querySelector('.v-btn.down');
+            const issue = allIssues.find(i => i.id === id);
             if (!issue) {
                 votingInProgress.delete(id);
                 return;
@@ -456,75 +355,57 @@
 
             const oldUp = issue.upvotes || 0;
             const oldDown = issue.downvotes || 0;
-            const prevVote = votedIssues.has(id + "-up")
-                ? "up"
-                : votedIssues.has(id + "-down")
-                    ? "down"
-                    : null;
+            const prevVote = votedIssues.has(id + '-up') ? 'up' : votedIssues.has(id + '-down') ? 'down' : null;
 
             let actionType = type;
             if (prevVote === type) {
-                actionType = "unvote";
+                actionType = 'unvote';
             }
 
             // Optimistic update
-            if (actionType === "unvote") {
-                if (prevVote === "up")
-                    issue.upvotes = Math.max(0, oldUp - 1);
+            if (actionType === 'unvote') {
+                if (prevVote === 'up') issue.upvotes = Math.max(0, oldUp - 1);
                 else issue.downvotes = Math.max(0, oldDown - 1);
             } else if (prevVote) {
                 // Switching vote: undo old, apply new
-                if (prevVote === "up")
-                    issue.upvotes = Math.max(0, oldUp - 1);
+                if (prevVote === 'up') issue.upvotes = Math.max(0, oldUp - 1);
                 else issue.downvotes = Math.max(0, oldDown - 1);
-                if (type === "up") issue.upvotes = (issue.upvotes || 0) + 1;
+                if (type === 'up') issue.upvotes = (issue.upvotes || 0) + 1;
                 else issue.downvotes = (issue.downvotes || 0) + 1;
             } else {
                 // Fresh vote
-                if (type === "up") issue.upvotes = oldUp + 1;
+                if (type === 'up') issue.upvotes = oldUp + 1;
                 else issue.downvotes = oldDown + 1;
             }
 
             const newScore = (issue.upvotes || 0) - (issue.downvotes || 0);
             scoreEl.textContent = newScore;
-            scoreEl.className = `v-score ${newScore > 0 ? "positive" : newScore < 0 ? "negative" : ""}`;
+            scoreEl.className = `v-score ${newScore > 0 ? 'positive' : newScore < 0 ? 'negative' : ''}`;
 
             // Animate
-            scoreEl.classList.remove("score-pulse");
+            scoreEl.classList.remove('score-pulse');
             void scoreEl.offsetWidth;
-            scoreEl.classList.add("score-pulse");
+            scoreEl.classList.add('score-pulse');
 
             // Update button states
-            upBtn.classList.remove("voted");
-            downBtn.classList.remove("voted");
-            vc.classList.remove("voted-up", "voted-down");
+            upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
+            vc.classList.remove('voted-up', 'voted-down');
 
-            if (actionType !== "unvote") {
-                if (type === "up") {
-                    upBtn.classList.add("voted");
-                    vc.classList.add("voted-up");
-                } else {
-                    downBtn.classList.add("voted");
-                    vc.classList.add("voted-down");
-                }
+            if (actionType !== 'unvote') {
+                if (type === 'up') { upBtn.classList.add('voted'); vc.classList.add('voted-up'); }
+                else { downBtn.classList.add('voted'); vc.classList.add('voted-down'); }
             }
 
             // Update local storage
-            if (prevVote) votedIssues.delete(id + "-" + prevVote);
-            if (actionType !== "unvote") votedIssues.add(id + "-" + type);
-            localStorage.setItem(
-                "votedIssues",
-                JSON.stringify([...votedIssues]),
-            );
+            if (prevVote) votedIssues.delete(id + '-' + prevVote);
+            if (actionType !== 'unvote') votedIssues.add(id + '-' + type);
+            localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
 
             try {
                 const res = await fetch(`/api/issues/${id}/vote`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        type: actionType,
-                        fingerprint: getFingerprint(),
-                    }),
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: actionType, fingerprint: getFingerprint() })
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -532,9 +413,9 @@
                     issue.downvotes = data.downvotes;
                     const confirmed = data.upvotes - data.downvotes;
                     scoreEl.textContent = confirmed;
-                    scoreEl.className = `v-score ${confirmed > 0 ? "positive" : confirmed < 0 ? "negative" : ""}`;
+                    scoreEl.className = `v-score ${confirmed > 0 ? 'positive' : confirmed < 0 ? 'negative' : ''}`;
                 } else {
-                    throw new Error("Vote failed server-side");
+                    throw new Error('Vote failed server-side');
                 }
             } catch (e) {
                 // Rollback on network error or rejection
@@ -542,28 +423,19 @@
                 issue.downvotes = oldDown;
                 const rollback = oldUp - oldDown;
                 scoreEl.textContent = rollback;
-                scoreEl.className = `v-score ${rollback > 0 ? "positive" : rollback < 0 ? "negative" : ""}`;
+                scoreEl.className = `v-score ${rollback > 0 ? 'positive' : rollback < 0 ? 'negative' : ''}`;
 
-                upBtn.classList.remove("voted");
-                downBtn.classList.remove("voted");
-                vc.classList.remove("voted-up", "voted-down");
+                upBtn.classList.remove('voted'); downBtn.classList.remove('voted');
+                vc.classList.remove('voted-up', 'voted-down');
 
-                votedIssues.delete(id + "-" + type);
+                votedIssues.delete(id + '-' + type);
                 if (prevVote) {
-                    votedIssues.add(id + "-" + prevVote);
-                    if (prevVote === "up") {
-                        upBtn.classList.add("voted");
-                        vc.classList.add("voted-up");
-                    } else {
-                        downBtn.classList.add("voted");
-                        vc.classList.add("voted-down");
-                    }
+                    votedIssues.add(id + '-' + prevVote);
+                    if (prevVote === 'up') { upBtn.classList.add('voted'); vc.classList.add('voted-up'); }
+                    else { downBtn.classList.add('voted'); vc.classList.add('voted-down'); }
                 }
-                localStorage.setItem(
-                    "votedIssues",
-                    JSON.stringify([...votedIssues]),
-                );
-                console.error("Vote failed:", e);
+                localStorage.setItem('votedIssues', JSON.stringify([...votedIssues]));
+                console.error('Vote failed:', e);
             } finally {
                 votingInProgress.delete(id);
             }
@@ -571,139 +443,100 @@
 
         /* ---- Modal ---- */
         function openModal() {
-            document
-                .getElementById("modal-overlay")
-                .classList.add("active");
+            document.getElementById('modal-overlay').classList.add('active');
         }
 
         function closeModal() {
-            document
-                .getElementById("modal-overlay")
-                .classList.remove("active");
-            document.getElementById("form-msg").textContent = "";
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.getElementById('form-msg').textContent = '';
         }
 
         // Close on backdrop click
-        document
-            .getElementById("modal-overlay")
-            .addEventListener("click", function (e) {
-                if (e.target === this) closeModal();
-            });
+        document.getElementById('modal-overlay').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
 
         /* ---- Submit Issue ---- */
         async function submitIssue(e) {
             e.preventDefault();
-            const title = document
-                .getElementById("issue-title")
-                .value.trim();
-            const category =
-                document.getElementById("issue-category").value;
-            const description = document
-                .getElementById("issue-desc")
-                .value.trim();
-            const proposedSolution = document
-                .getElementById("issue-proposed-solution")
-                .value.trim();
-            const msgEl = document.getElementById("form-msg");
-            const btn = document.getElementById("submit-btn");
+            const title = document.getElementById('issue-title').value.trim();
+            const category = document.getElementById('issue-category').value;
+            const description = document.getElementById('issue-desc').value.trim();
+            const proposedSolution = document.getElementById('issue-proposed-solution').value.trim();
+            const msgEl = document.getElementById('form-msg');
+            const btn = document.getElementById('submit-btn');
 
             if (!title || !category || !description) {
-                msgEl.className = "form-msg error";
-                msgEl.textContent = "All fields are required.";
+                msgEl.className = 'form-msg error';
+                msgEl.textContent = 'All fields are required.';
                 return;
             }
 
             btn.disabled = true;
-            btn.textContent = "Submitting…";
+            btn.textContent = 'Submitting…';
 
             try {
-                const res = await fetch("/api/issues", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        title,
-                        category,
-                        description,
-                        proposedSolution,
-                    }),
+                const res = await fetch('/api/issues', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, category, description, proposedSolution })
                 });
                 if (res.ok) {
-                    msgEl.className = "form-msg success";
-                    msgEl.textContent =
-                        "Issue submitted! It will appear once reviewed.";
-                    document.getElementById("issue-form").reset();
-                    setTimeout(() => {
-                        closeModal();
-                        init();
-                    }, 1500);
+                    msgEl.className = 'form-msg success';
+                    msgEl.textContent = 'Issue submitted! It will appear once reviewed.';
+                    document.getElementById('issue-form').reset();
+                    setTimeout(() => { closeModal(); init(); }, 1500);
                 } else {
                     const err = await res.json();
-                    msgEl.className = "form-msg error";
-                    msgEl.textContent = err.error || "Submission failed.";
+                    msgEl.className = 'form-msg error';
+                    msgEl.textContent = err.error || 'Submission failed.';
                 }
             } catch {
-                msgEl.className = "form-msg error";
-                msgEl.textContent = "Network error. Try again.";
+                msgEl.className = 'form-msg error';
+                msgEl.textContent = 'Network error. Try again.';
             } finally {
                 btn.disabled = false;
-                btn.textContent = "Submit Issue";
+                btn.textContent = 'Submit Issue';
             }
         }
 
         /* ---- Real-time polling for upvotes ---- */
         async function pollVotes() {
             try {
-                const res = await fetch("/api/issues");
+                const res = await fetch('/api/issues');
                 if (!res.ok) return;
                 const fresh = await res.json();
 
                 // Update score in place for any issue whose votes changed
                 let needsRerender = false;
-                fresh.forEach((newIssue) => {
-                    const oldIssue = allIssues.find(
-                        (i) => i.id === newIssue.id,
-                    );
+                fresh.forEach(newIssue => {
+                    const oldIssue = allIssues.find(i => i.id === newIssue.id);
                     if (oldIssue) {
-                        if (
-                            oldIssue.upvotes !== newIssue.upvotes ||
-                            oldIssue.downvotes !== newIssue.downvotes
-                        ) {
+                        if (oldIssue.upvotes !== newIssue.upvotes || oldIssue.downvotes !== newIssue.downvotes) {
                             oldIssue.upvotes = newIssue.upvotes;
                             oldIssue.downvotes = newIssue.downvotes;
-                            const scoreEl = document.getElementById(
-                                `score-${newIssue.id}`,
-                            );
+                            const scoreEl = document.getElementById(`score-${newIssue.id}`);
                             if (scoreEl) {
-                                const newScore =
-                                    (newIssue.upvotes || 0) -
-                                    (newIssue.downvotes || 0);
-                                if (
-                                    scoreEl.textContent !== String(newScore)
-                                ) {
+                                const newScore = (newIssue.upvotes || 0) - (newIssue.downvotes || 0);
+                                if (scoreEl.textContent !== String(newScore)) {
                                     scoreEl.textContent = newScore;
-                                    scoreEl.classList.remove("score-pulse");
+                                    scoreEl.classList.remove('score-pulse');
                                     void scoreEl.offsetWidth; // force reflow to restart animation
-                                    scoreEl.classList.add("score-pulse");
+                                    scoreEl.classList.add('score-pulse');
                                 }
                             }
                         }
-                        if (
-                            oldIssue.comment_count !==
-                            newIssue.comment_count ||
-                            oldIssue.status !== newIssue.status
-                        ) {
+                        if (oldIssue.comment_count !== newIssue.comment_count || oldIssue.status !== newIssue.status) {
                             needsRerender = true;
                         }
                     }
                 });
 
                 // Detect new issues or removed issues, do a soft re-render if so
-                const knownIds = new Set(allIssues.map((i) => i.id));
-                const freshIds = new Set(fresh.map((i) => i.id));
-                const hasNew = fresh.some((i) => !knownIds.has(i.id));
-                const hasRemoved = allIssues.some(
-                    (i) => !freshIds.has(i.id),
-                );
+                const knownIds = new Set(allIssues.map(i => i.id));
+                const freshIds = new Set(fresh.map(i => i.id));
+                const hasNew = fresh.some(i => !knownIds.has(i.id));
+                const hasRemoved = allIssues.some(i => !freshIds.has(i.id));
                 if (hasNew || hasRemoved || needsRerender) {
                     allIssues = fresh;
                     renderFeed();
@@ -720,12 +553,9 @@
         }
 
         // Pause polling when tab is hidden, resume when visible (saves resources)
-        document.addEventListener("visibilitychange", () => {
+        document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                if (pollIntervalId) {
-                    clearInterval(pollIntervalId);
-                    pollIntervalId = null;
-                }
+                if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
             } else {
                 pollVotes();
                 startPolling();
@@ -733,25 +563,22 @@
         });
 
         /* ---- FAB scroll behavior ----
-       Show the floating Submit button as soon as the banner Submit
-       button leaves the viewport. */
+                  Show the floating Submit button as soon as the banner Submit
+                  button leaves the viewport. */
         function setupFAB() {
-            const bannerBtn = document.getElementById("banner-submit-btn");
-            const fab = document.getElementById("fab-submit");
-            if (!bannerBtn || !fab || !("IntersectionObserver" in window)) {
-                if (fab) fab.classList.add("visible");
+            const bannerBtn = document.getElementById('banner-submit-btn');
+            const fab = document.getElementById('fab-submit');
+            if (!bannerBtn || !fab || !('IntersectionObserver' in window)) {
+                if (fab) fab.classList.add('visible');
                 return;
             }
-            const observer = new IntersectionObserver(
-                ([entry]) => {
-                    if (entry.isIntersecting) {
-                        fab.classList.remove("visible");
-                    } else {
-                        fab.classList.add("visible");
-                    }
-                },
-                { threshold: 0.1 },
-            );
+            const observer = new IntersectionObserver(([entry]) => {
+                if (entry.isIntersecting) {
+                    fab.classList.remove('visible');
+                } else {
+                    fab.classList.add('visible');
+                }
+            }, { threshold: 0.1 });
             observer.observe(bannerBtn);
         }
 
@@ -762,6 +589,7 @@
             setupFAB();
         };
     </script>
+
 </body>
 
 </html>
